@@ -1,11 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  gradient-from: #60a5fa;
-  gradient-to-position: #DC2625;
+  --animate-shimmer: shimmer 2s ease-in-out infinite;
+
+  @keyframes shimmer{
+    0% { transform: translateX(-500px)}
+    100% { transform: translateX(0)}
+  }
 }
 
-
+main {
+  padding-top: 20px;
+}
 
 .banner-gradient {
   background-color: #60a5fa;

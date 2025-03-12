@@ -9,7 +9,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  //base: "/lpmonteiro/",
   build: {
-    outDir: '../dist'
-  },
+    
+    outDir: 'dist', // Ensure it's inside your project
+    emptyOutDir: true, // Clean old files before building
+  }
 })

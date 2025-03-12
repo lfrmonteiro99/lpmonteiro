@@ -14,7 +14,7 @@ export default function BannerIntroductionText() {
 
     return (
         <>
-        <p className="text-[#ADB7BE] text-base sm:text-lg lg:text-xl mb-6 font-[400] w-full md:px-12">
+        <p className="text-[#ADB7BE] text-base px-2 sm:text-lg lg:text-xl mb-6 font-[400] w-full md:px-12">
         {text}
         </p>
         <div className="flex gap-2 justify-center">
