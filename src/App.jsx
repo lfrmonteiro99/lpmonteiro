@@ -15,6 +15,7 @@ import ReviewsProvider from "./Provider/ReviewsProvider";
 import ContactMe from "./Components/ContactMe";
 
 export default function App() {
+  console.log();
   const [scrollPosition, setScrollPosition] = React.useState(0);
 
   React.useEffect(() => {

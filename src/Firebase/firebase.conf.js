@@ -7,7 +7,7 @@ import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDaszx_UDm9whSiLr-wrN-PbNsu6-C1GW4",
+  apiKey: import.meta.env.VITE_GOOGLE_KEY,
   authDomain: "portfolio-70566.firebaseapp.com",
   projectId: "portfolio-70566",
   databaseURL: "https://portfolio-70566-default-rtdb.europe-west1.firebasedatabase.app",
