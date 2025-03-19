@@ -8,14 +8,16 @@ import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_GOOGLE_KEY,
-  authDomain: "portfolio-70566.firebaseapp.com",
-  projectId: "portfolio-70566",
-  databaseURL: "https://portfolio-70566-default-rtdb.europe-west1.firebasedatabase.app",
-  storageBucket: "portfolio-70566.firebasestorage.app",
+  authDomain: import.meta.env.VITE_FIREBASE_PROJECT_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREABSE_PROJECT_ID,
+  databaseURL: import.meta.env.VITE_DATABASE_URL,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
   messagingSenderId: "YOUR_CORRECT_SENDER_ID",  // <--- Replace with the correct Sender ID
-  appId: "1:439313410628:web:2e283375fd52d38461aa11",
-  measurementId: "G-XMN8G6130R"
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
+
+console.log(import.meta.env.VITE_GOOGLE_KEY);
 
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);

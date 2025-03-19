@@ -318,7 +318,7 @@ export default function Banner() {
           {/* <div className="sm:flex block justify-center mt-5">
             <div className="px-4">
               <a
-                href="/lpmonteiro/cv_latest.pdf"
+                href="/cv_latest.pdf"
                 className="transition text-center flex w-full justify-center text-center group duration-200 px-6 py-3 cursor-pointer w-full rounded-full mr-4 bg-transparent hover:bg-gradient-to-br hover:from-blue-400 hover:to-red-600 bg-slate-200 text-white hover:text-white hover:opacity-80transition text-center flex justify-center text-center group duration-200 px-6 py-3 cursor-pointer sm:w-fit rounded-full mr-4 bg-slate-200 opacity-80"
               >
                 Download CV

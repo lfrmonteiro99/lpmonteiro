@@ -1,7 +1,7 @@
 export const projects = [
   {
     id: 1,
-    image: "/lpmonteiro/images/1.png",
+    image: "/images/1.png",
     alt: "POP Penha",
     title: "POP Penha Website",
     description:
@@ -13,7 +13,7 @@ export const projects = [
   },
   {
     id: 2,
-    image: "/lpmonteiro/images/2.png",
+    image: "/images/2.png",
     alt: "OP Jovem",
     title: "OP Jovem Website",
     description:
@@ -25,7 +25,7 @@ export const projects = [
   },
   {
     id: 3,
-    image: "/lpmonteiro/images/3.png",
+    image: "/images/3.png",
     alt: "Lisboa Participa",
     title: "Lisboa Participa Website",
     description: "Participation Portal of the Lisbon City Council.",
@@ -36,7 +36,7 @@ export const projects = [
   },
   {
     id: 4,
-    image: "/lpmonteiro/images/workinprogress.gif",
+    image: "/images/workinprogress.gif",
     alt: "work in progress",
     title: "",
     description: "Many more projects will appear in this section.",

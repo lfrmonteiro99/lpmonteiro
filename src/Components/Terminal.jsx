@@ -344,7 +344,7 @@ export default function Terminal({
           { text: "Preparing resume for download...", type: "system" },
           { text: "", type: "break" },
           {
-            text: "Resume available at: /lpmonteiro/resume.pdf",
+            text: "Resume available at: /resume.pdf",
             type: "result",
           },
           { text: "", type: "break" },
