@@ -1,13 +1,4 @@
-import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-} from "@headlessui/react";
-import { Bars3Icon, BellIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import React from "react";
 import Banner from "./Components/Banner";
 import "./index.css";
 import Navbar from "./Components/Navbar";
@@ -16,34 +7,25 @@ import Skills from "./Components/Skills";
 import Footer from "./Components/Footer";
 import Projects from "./Components/Projects";
 import Experience from "./Components/Experience";
-
-const user = {
-  name: "Tom Cook",
-  email: "tom@example.com",
-  imageUrl:
-    "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80",
-};
-const navigation = [
-  { name: "Dashboard", href: "#", current: true },
-  { name: "Team", href: "#", current: false },
-  { name: "Projects", href: "#", current: false },
-  { name: "Calendar", href: "#", current: false },
-  { name: "Reports", href: "#", current: false },
-];
-const userNavigation = [
-  { name: "Your Profile", href: "#" },
-  { name: "Settings", href: "#" },
-  { name: "Sign out", href: "#" },
-];
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+import { TerminalProvider } from "./Context/TerminalContext";
+import TerminalButton from "./Components/TerminalButton";
+import BackToTop from "./Components/BackToTop";
+import { Reviews } from "./Components/Reviews";
+import ReviewsProvider from "./Provider/ReviewsProvider";
+import ContactMe from "./Components/ContactMe";
 
 export default function App() {
+  const [scrollPosition, setScrollPosition] = React.useState(0);
+
+  React.useEffect(() => {
+    const handleScroll = () => setScrollPosition(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   return (
-    <>
-      {/*
+    <TerminalProvider>
+      <ReviewsProvider>
+        {/*
         This example requires updating your template:
 
         ```
@@ -52,24 +34,27 @@ export default function App() {
         ```
       */}
 
-      <div className="min-h-full bg-dark-950">
-        <header>
-          <div className="xl:max-w-[1280px] w-full">
-            <Navbar />
-          </div>
-        </header>
-        <main className="pt-16 md:pt-24">
-          <div className="container mx-auto py-4 px-12 mt-16 md:mt-20">
+        <div className="w-full bg-[rgb(22 24 22/1)] scroll-smooth">
+          <header>
+            <div className="w-full">
+              <Navbar scrollPosition={scrollPosition} />
+            </div>
+          </header>
+          <main className="pt-16 md:pt-24">
             <Banner />
-            <About />
-            <Projects />
-
+            <About scrollPosition={scrollPosition} />
+            <Projects scrollPosition={scrollPosition} />
             <Skills />
             <Experience />
-          </div>
-        </main>
-        <Footer />
-      </div>
-    </>
+            <Reviews />
+            <ContactMe />
+          </main>
+          <section className=""></section>
+          <Footer />
+          <BackToTop />
+          <TerminalButton />
+        </div>
+      </ReviewsProvider>
+    </TerminalProvider>
   );
 }

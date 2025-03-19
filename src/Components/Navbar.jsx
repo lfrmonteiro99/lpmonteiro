@@ -1,20 +1,25 @@
 import React from "react";
 
-export default function Navbar() {
-  const [scrollPosition, setScrollPosition] = React.useState(0);
+export default function Navbar({ scrollPosition }) {
   const [active, setActive] = React.useState("home");
   const [isOpen, setIsOpen] = React.useState(false);
+  const eleRef = React.useRef(null);
+
+  const appearAnimations = [
+    "animate-appearT",
+    "animate-appear",
+    "animate-appearR",
+  ];
 
   React.useEffect(() => {
-    const handleScroll = () => setScrollPosition(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  React.useEffect(() => {
+    const index = Math.floor(Math.random() * appearAnimations.length);
     if (isOpen) {
       document.body.style.overflow = "hidden"; // Disable scrolling
+      eleRef.current.classList.remove("animate-disappear");
+      eleRef.current.classList.add(appearAnimations[index]);
     } else {
+      eleRef.current.classList.remove("animate-*");
+      eleRef.current.classList.add("animate-disappear");
       document.body.style.overflow = "auto"; // Re-enable scrolling
     }
   }, [isOpen]);
@@ -24,7 +29,7 @@ export default function Navbar() {
       {/* Navbar */}
       <nav
         className={`fixed w-full h-16 md:h-20 top-0 z-50 flex justify-center items-center ${
-          scrollPosition > 50 || isOpen
+          scrollPosition > 100 || isOpen
             ? isOpen
               ? "backdrop-blur-sm bg-gray/30"
               : "backdrop-blur-sm bg-white/30"
@@ -34,18 +39,23 @@ export default function Navbar() {
         <div className="w-full container px-12 mx-auto flex justify-between items-center">
           {/* Logo */}
           <div className="py-4 md:py-6">
-            <a className="bg-gradient-to-r from-blue-400 to-red-600 bg-clip-text text-transparent">
+            <a
+              href="#home"
+              aria-label="Logo link to home section"
+              className="text-white"
+            >
               Luís Monteiro
             </a>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex gap-10">
+          {/* <div className="hidden md:flex gap-10">
             {["home", "projects", "about", "skills", "experience"].map(
               (item) => (
                 <a
                   key={item}
                   href={`#${item}`}
+                  aria-label={`Link to ${item}`}
                   onClick={() => setActive(item)}
                   className={`text-lg ${
                     active === item ? "text-[#60a5fa]" : "text-[#ADB7BE]"
@@ -55,10 +65,14 @@ export default function Navbar() {
                 </a>
               )
             )}
-          </div>
+          </div> */}
 
           {/* Mobile Menu Toggle */}
-          <button className="md:hidden p-2" onClick={() => setIsOpen(!isOpen)}>
+          <button
+            aria-label="Button to open mobile menu"
+            className="p-2"
+            onClick={() => setIsOpen(!isOpen)}
+          >
             {isOpen ? (
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -88,77 +102,33 @@ export default function Navbar() {
 
       {/* Mobile Menu Overlay */}
       <div
+        ref={eleRef}
         className={`fixed inset-0 z-40 bg-gray-500/40 backdrop-blur-sm transition-opacity ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        } md:hidden`}
+        } `}
       >
-        <div className="flex flex-col items-center pt-32 gap-6 h-full overflow-y-auto">
-          {/* Menu items */}
-          <a
-            href="#home"
-            onClick={() => {
-              setActive("home");
-              setIsOpen(false);
-            }}
-            className={`text-xl ${
-              active === "home" ? "text-[#60a5fa]" : "text-[#ADB7BE]"
-            } hover:text-white`}
-          >
-            Home
-          </a>
-          <hr className="w-1/2 border-gray-600" />
-          <a
-            href="#about"
-            onClick={() => {
-              setActive("about");
-              setIsOpen(false);
-            }}
-            className={`text-xl ${
-              active === "about" ? "text-[#60a5fa]" : "text-[#ADB7BE]"
-            } hover:text-white`}
-          >
-            About
-          </a>
-          <hr className="w-1/2 border-gray-600" />
-          <a
-            href="#projects"
-            onClick={() => {
-              setActive("projects");
-              setIsOpen(false);
-            }}
-            className={`text-xl ${
-              active === "projects" ? "text-[#60a5fa]" : "text-[#ADB7BE]"
-            } hover:text-white`}
-          >
-            Projects
-          </a>
-
-          <a
-            href="#skills"
-            onClick={() => {
-              setActive("skills");
-              setIsOpen(false);
-            }}
-            className={`text-xl ${
-              active === "skills" ? "text-[#60a5fa]" : "text-[#ADB7BE]"
-            } hover:text-white`}
-          >
-            Skills
-          </a>
-          <hr className="w-1/2 border-gray-600" />
-          <a
-            href="#experience"
-            onClick={() => {
-              setActive("experience");
-              setIsOpen(false);
-            }}
-            className={`text-xl ${
-              active === "experience" ? "text-[#60a5fa]" : "text-[#ADB7BE]"
-            } hover:text-white`}
-          >
-            Work Experience
-          </a>
-          <hr className="w-1/2 border-gray-600" />
+        <div className="flex flex-col items-center pt-32 gap-5 h-full ">
+          {["home", "projects", "about", "skills", "experience"].map(
+            (item, index) => {
+              return (
+                <a
+                  key={index}
+                  href={`#${item}`}
+                  aria-label={`Link to ${item}`}
+                  onClick={() => {
+                    setActive(item);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-center text-xl ${
+                    active === item ? "text-[#60a5fa]" : "text-[#ADB7BE]"
+                  } hover:text-white`}
+                >
+                  <hr className="mb-5 border-gray-500/80"></hr>
+                  {item.charAt(0).toUpperCase() + item.slice(1)}
+                </a>
+              );
+            }
+          )}
         </div>
       </div>
     </>

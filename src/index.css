@@ -1,13 +1,105 @@
 @import "tailwindcss";
 
 @theme {
-  --animate-shimmer: shimmer 2s ease-in-out infinite;
+  --animate-bounce: bounce 2s ease-in-out infinite;
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); opacity: 1 }
+    50% { transform: translateY(-10px); opacity: 0.8 }
+  }
+  --animate-shimmer: shimmer 3s ease-in-out infinite;
 
   @keyframes shimmer{
-    0% { transform: translateX(-500px)}
-    100% { transform: translateX(0)}
+    0% { transform: translateX(-500px); opacity: 0}
+    50% {transform: translateX(-300px); opacity: 0.5}
+    100% { transform: translateX(0); opactity: 1}
   }
+
+  --animate-appear: appear 0.5s ease-in;
+  @keyframes appear {
+    0% {transform: translateX(-500px); opacity: 0}
+    100% {transform: translateX(0); opacity: 1}
+  }
+
+    --animate-appearT: appearT 0.5s ease-in;
+  
+    @keyframes appearT {
+      0% {
+        transform: translateY(-500px);
+        opacity: 0
+      }
+  
+      100% {
+        transform: translateY(0);
+        opacity: 1
+      }
+    }
+
+    --animate-appearR: appearR 0.5s ease-in;
+  
+    @keyframes appearR {
+      0% {
+        transform: translateX(500px);
+        opacity: 0
+      }
+  
+      100% {
+        transform: translateX(0);
+        opacity: 1
+      }
+    }
+
+    --animate-fadeOut: fadeOut 1s ease-out;
+    @keyframes fadeOut {
+      0% { opacity: 1 }
+      100% { opacity: 0 }
+    }
+
+                --animate-appearB: appearB 1s ease-in;
+        
+                @keyframes appearB {
+                  0% {
+                    transform: translateY(500px);
+                    opacity: 0
+                  }
+        
+                  100% {
+                    transform: translateY(0);
+                    opacity: 1
+                  }
+                }
+
+  --animate-disappear: disappear 1s ease-out;
+  @keyframes disappear {
+    0% {
+        transform: translateX(0);
+        opacity: 1
+      }
+    
+      100% {
+        transform: translateX(-500px);
+        opacity: 0
+      }
+  }
+
+  --animate-expand: expand 1s ease-in;
+  @keyframes expand {
+    0% {
+        transform: scale(0);
+        opacity: 0
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1
+      }
 }
+}
+
+html {
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+}
+
+
 
 main {
   padding-top: 20px;
@@ -32,6 +124,10 @@ main {
 
 body, html{
   background: rgb(22 24 22/var(--tw-bg-opacity, 1));
+  font-family: 'Neue Haas Grotesk Display Pro', sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }
 
 .banner-introduction-left {
@@ -42,4 +138,53 @@ body, html{
 .banner-introduction-left .banner-introduction-text{
   font-size: 1rem;
   font-weight: bolder;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+@keyframes shimmer1 {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer1 {
+  animation: shimmer1 3s infinite;
+  background-size: 200% 100%;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
