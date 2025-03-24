@@ -73,13 +73,17 @@ export const CommentProvider = ({ children }) => {
 
   // Get comments for a specific post
   const getPostComments = (postId) => {
-    return Object.entries(comments)
+    if (!postId) return [];
+
+    const postComments = Object.entries(comments)
       .filter(([, comment]) => comment.postId === postId)
       .map(([id, comment]) => ({
         id,
         ...comment,
       }))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    return postComments;
   };
 
   const value = {

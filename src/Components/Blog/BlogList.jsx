@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlog } from "../../Context/BlogContext";
+import { useComment } from "../../Context/CommentContext";
 
 export default function BlogList() {
   const navigate = useNavigate();
@@ -17,14 +18,44 @@ export default function BlogList() {
     isLoadingMore,
     hasPostsInDb,
   } = useBlog();
+  const { getPostComments } = useComment();
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays <= 10) {
+      return `${diffDays} days ago`;
+    }
+
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  // Add debug logging
+  React.useEffect(() => {
+    if (posts.length > 0) {
+      console.log(
+        "Posts with comments:",
+        posts.map((post) => ({
+          id: post.id,
+          title: post.title,
+          commentCount: getPostComments(post.id)?.length || 0,
+        }))
+      );
+    }
+  }, [posts, getPostComments]);
 
   const handlePostClick = (post) => {
-    console.log("Clicking post with ID:", post.id);
     navigate(`/blog/${post.id}`);
   };
 
   const handleTagClick = (tag) => {
-    console.log("Tag clicked in BlogList:", tag);
     setSelectedTag(selectedTag === tag ? null : tag);
   };
 
@@ -55,8 +86,6 @@ export default function BlogList() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold mb-8 text-white">Blog</h2>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Left Column - Filters */}
         <div className="lg:col-span-1 space-y-6">
@@ -160,19 +189,40 @@ export default function BlogList() {
                   <h2 className="text-2xl font-bold text-white mb-4 line-clamp-2">
                     {posts[0].title}
                   </h2>
-                  <div
-                    className="text-gray-400 mb-6 line-clamp-4"
-                    dangerouslySetInnerHTML={{ __html: posts[0].content }}
-                  />
+                  <div className="text-gray-400 mb-6 line-clamp-4">
+                    {posts[0].summary}
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {posts[0].tags?.slice(0, 3).map((tag, index) => (
                       <span
                         key={`${posts[0].id}-tag-${index}`}
-                        className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded-full hover:bg-gray-600 transition-colors"
+                        className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600/30 transition-colors border border-blue-500/20"
                       >
                         {tag}
                       </span>
                     ))}
+                  </div>
+                  <div className="mt-auto pt-4 flex items-center gap-4 text-gray-400">
+                    <span className="text-sm">
+                      {formatDate(posts[0].createdAt)}
+                    </span>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                    <span className="text-sm -ml-2">
+                      {getPostComments(posts[0].id).length}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -202,15 +252,14 @@ export default function BlogList() {
                     <h2 className="text-xl font-bold text-white mb-2 line-clamp-2">
                       {post.title}
                     </h2>
-                    <div
-                      className="text-gray-400 mb-4 line-clamp-4 flex-grow"
-                      dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
+                    <div className="text-gray-400 mb-4 line-clamp-4 flex-grow">
+                      {post.summary}
+                    </div>
                     <div className="flex flex-wrap gap-2 mt-auto">
                       {post.tags?.slice(0, 2).map((tag, index) => (
                         <span
                           key={`${post.id}-tag-${index}`}
-                          className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded-full hover:bg-gray-600 transition-colors"
+                          className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600/30 transition-colors border border-blue-500/20"
                         >
                           {tag}
                         </span>
@@ -218,11 +267,33 @@ export default function BlogList() {
                       {post.tags?.length > 2 && (
                         <span
                           key={`${post.id}-more-tags`}
-                          className="px-2 py-1 text-xs bg-gray-700 text-gray-300 rounded-full"
+                          className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/20"
                         >
                           +{post.tags.length - 2} more
                         </span>
                       )}
+                    </div>
+                    <div className="mt-4 flex items-center gap-4 text-gray-400">
+                      <span className="text-sm">
+                        {formatDate(post.createdAt)}
+                      </span>
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        />
+                      </svg>
+                      <span className="text-sm -ml-2">
+                        {getPostComments(post.id).length}
+                      </span>
                     </div>
                   </div>
                 </div>

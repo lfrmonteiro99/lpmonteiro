@@ -90,19 +90,23 @@ const BlogPostPage = () => {
           return;
         }
 
-        setIsLoading(true);
         const postData = await getPostById(postId);
-        console.log("BlogPostPage - Received post data:", postData);
-        setPost(postData);
+        if (postData) {
+          setPost(postData);
+        } else {
+          console.error("Post not found");
+          navigate("/blog");
+        }
       } catch (error) {
         console.error("Error fetching post:", error);
+        navigate("/blog");
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPost();
-  }, [id, getPostById]);
+  }, [id, getPostById, navigate]);
 
   // Ensure page starts at top when loading a blog post
   useEffect(() => {
@@ -251,7 +255,7 @@ const BlogPostPage = () => {
           </div>
 
           {/* Comments */}
-          <Comments postId={id} />
+          <Comments postId={post.id} />
 
           {/* Footer */}
           <div className="mt-8 pt-8 border-t border-gray-700">

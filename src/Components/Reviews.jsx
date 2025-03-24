@@ -279,13 +279,14 @@ export const Reviews = () => {
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: #10B981;
+    background: #1E40AF;
     color: white;
     padding: 1rem 2rem;
     border-radius: 8px;
     z-index: 50;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 0 20px rgba(59, 130, 246, 0.3);
     animation: slideInDown 0.5s ease-out forwards, fadeOut 0.5s ease-in forwards 3s;
+    border: 1px solid rgba(59, 130, 246, 0.2);
   }
 
   @keyframes shimmer {
@@ -397,22 +398,30 @@ export const Reviews = () => {
               {!isLoggedIn ? (
                 <div className="text-center">
                   <p className="text-gray-400 mb-4">
-                    Sign in to share your experience
+                    Sign in to share your experience or continue as anonymous
                   </p>
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                    onClick={onGoogleSignIn}
-                  >
-                    <div className="flex items-center justify-center">
-                      <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                        <path
-                          fill="#ffffff"
-                          d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
-                        />
-                      </svg>
-                      Sign in with Google
-                    </div>
-                  </button>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                      onClick={onGoogleSignIn}
+                    >
+                      <div className="flex items-center justify-center">
+                        <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                          <path
+                            fill="#ffffff"
+                            d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
+                          />
+                        </svg>
+                        Sign in with Google
+                      </div>
+                    </button>
+                    <button
+                      className="bg-gray-700 hover:bg-gray-600 text-white py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                      onClick={() => setShowForm(true)}
+                    >
+                      Continue as Anonymous
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row items-center justify-between bg-gradient-to-r from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700 shadow-md">
@@ -631,14 +640,12 @@ export const Reviews = () => {
                     ? `No ${filterValue}-star reviews yet`
                     : "No reviews yet. Be the first to leave a review!"}
                 </p>
-                {!isLoggedIn && (
-                  <button
-                    className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg transition-colors duration-200"
-                    onClick={onGoogleSignIn}
-                  >
-                    Sign in to Write a Review
-                  </button>
-                )}
+                <button
+                  className="mt-6 bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg transition-colors duration-200"
+                  onClick={() => setShowForm(true)}
+                >
+                  Write a Review
+                </button>
               </div>
             )}
 

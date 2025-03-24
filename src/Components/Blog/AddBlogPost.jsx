@@ -20,6 +20,7 @@ const AddBlogPost = () => {
   } = useBlog();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [summary, setSummary] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [autoSaveTimeout, setAutoSaveTimeout] = useState(null);
   const [error, setError] = useState(null);
@@ -80,6 +81,7 @@ const AddBlogPost = () => {
   const clearForm = () => {
     setTitle("");
     setContent("");
+    setSummary("");
     setError(null);
     setImageFile(null);
     setImagePreview(null);
@@ -218,6 +220,7 @@ const AddBlogPost = () => {
       const blogData = {
         title: title.trim(),
         content: content.trim(),
+        summary: summary.trim(),
         date: new Date().toISOString().split("T")[0],
         tags: tags,
         createdAt: new Date().toISOString(),
@@ -259,6 +262,8 @@ const AddBlogPost = () => {
 
 Title: [Your catchy title here]
 
+Summary: [A concise 2-3 sentence summary of the main points of the blog post]
+
 Content: [Your blog post content here in HTML format. Use <p> tags for paragraphs, <h2> for subtitles, and <ul>/<li> for lists. Include a clear introduction and conclusion.]
 
 Tags: [tag1, tag2, tag3, tag4, tag5]
@@ -271,7 +276,8 @@ Requirements:
 - Include a clear introduction and conclusion
 - Break content into paragraphs using <p> tags
 - If the context is brief, expand it with relevant insights
-- Make the content informative and valuable to readers`;
+- Make the content informative and valuable to readers
+- The summary should be concise and capture the main points`;
 
       console.log("Sending prompt to Gemini:", prompt);
       const result = await geminiModel.generateContent(prompt);
@@ -283,6 +289,9 @@ Requirements:
 
       // Parse the AI response
       const titleMatch = generatedContent.match(/Title: (.*?)(?:\n|$)/);
+      const summaryMatch = generatedContent.match(
+        /Summary: (.*?)(?:\nContent:|$)/s
+      );
       const contentMatch = generatedContent.match(
         /Content:\s*([\s\S]*?)(?=\nTags:|$)/
       );
@@ -290,11 +299,13 @@ Requirements:
 
       console.log("Parsed matches:", {
         title: titleMatch?.[1],
+        summary: summaryMatch?.[1],
         content: contentMatch?.[1],
         tags: tagsMatch?.[1],
       });
 
       if (titleMatch) setTitle(titleMatch[1].trim());
+      if (summaryMatch) setSummary(summaryMatch[1].trim());
       if (contentMatch) {
         const content = contentMatch[1].trim();
         console.log("Setting content:", content);
@@ -517,6 +528,23 @@ Requirements:
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div>
+          <label
+            htmlFor="summary"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Summary
+          </label>
+          <textarea
+            id="summary"
+            value={summary}
+            onChange={(e) => setSummary(e.target.value)}
+            placeholder="Enter a brief summary of your blog post..."
+            className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
             required
           />
         </div>

@@ -16,6 +16,10 @@ const Comments = ({ postId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
+    if (!postId) {
+      console.error("No post ID provided");
+      return;
+    }
 
     try {
       await addComment(postId, newComment.trim());
@@ -119,7 +123,7 @@ const Comments = ({ postId }) => {
                     })}
                   </p>
                 </div>
-                {user && user.email === comment.userEmail && (
+                {user && user === comment.userEmail && (
                   <div className="space-x-3">
                     {editingComment === comment.id ? (
                       <motion.button
