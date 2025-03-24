@@ -26,9 +26,9 @@ export default function Navbar({ scrollPosition }) {
     []
   ); // Empty dependency array means this only runs once
 
-  // Load user from localStorage on mount
+  // Load user from sessionStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
+    const savedUser = sessionStorage.getItem("user");
     if (savedUser) {
       setUser(savedUser);
     }
@@ -37,9 +37,10 @@ export default function Navbar({ scrollPosition }) {
   // Handle Google sign in
   const handleGoogleSignIn = async () => {
     try {
-      const response = await signInWithGoogle();
-      setUser(response.user.email);
-      localStorage.setItem("user", response.user.email);
+      const userCredential = await signInWithGoogle();
+      const userEmail = userCredential.user.email;
+      setUser(userEmail);
+      sessionStorage.setItem("user", userEmail);
     } catch (error) {
       console.error("Error signing in with Google:", error);
     }
@@ -48,7 +49,7 @@ export default function Navbar({ scrollPosition }) {
   // Handle sign out
   const handleSignOut = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
   };
 
   // Handle scroll behavior for navbar

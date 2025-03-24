@@ -22,7 +22,7 @@ export const CommentProvider = ({ children }) => {
   // Add a new comment
   const addComment = async (postId, content) => {
     try {
-      let userEmail = localStorage.getItem("user");
+      let userEmail = sessionStorage.getItem("user");
       if (!userEmail) {
         userEmail = "Anonymous";
       }

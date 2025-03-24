@@ -31,7 +31,7 @@ export const CommentProvider = ({ children }) => {
   // Add a new comment
   const addComment = async (postId, content) => {
     try {
-      const userEmail = localStorage.getItem("user");
+      const userEmail = sessionStorage.getItem("user");
       if (!userEmail) {
         throw new Error("User not authenticated");
       }

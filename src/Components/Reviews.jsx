@@ -33,7 +33,7 @@ export const Reviews = () => {
       .then((response) => {
         setUser(response.user.email);
         setIsLoggedIn(true);
-        localStorage.setItem("user", response.user.email);
+        sessionStorage.setItem("user", response.user.email);
         // Show the form after successful login
         setShowForm(true);
       })
@@ -46,7 +46,7 @@ export const Reviews = () => {
   const signOut = useCallback(() => {
     setUser(null);
     setIsLoggedIn(false);
-    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
     setShowForm(false);
   }, []);
 
@@ -114,9 +114,9 @@ export const Reviews = () => {
       ? reviews.filter((review) => review.star === filterValue)
       : reviews;
 
-  // Load user from localStorage on mount
+  // Load user from sessionStorage on mount
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = sessionStorage.getItem("user");
     if (user) {
       setUser(user);
       setIsLoggedIn(true);

@@ -11,7 +11,7 @@ const Comments = ({ postId }) => {
 
   const comments = getPostComments(postId);
 
-  const user = localStorage.getItem("user");
+  const user = sessionStorage.getItem("user");
 
   const handleSubmit = async (e) => {
     e.preventDefault();

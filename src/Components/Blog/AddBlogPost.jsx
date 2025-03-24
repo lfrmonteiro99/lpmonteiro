@@ -35,9 +35,9 @@ const AddBlogPost = () => {
   const [isUrlProcessing, setIsUrlProcessing] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
 
-  // Check if user is authorized from localStorage
+  // Check if user is authorized from sessionStorage
   const isAuthorized = () => {
-    const user = localStorage.getItem("user");
+    const user = sessionStorage.getItem("user");
     return user === "lfrmonteiro99@gmail.com";
   };
 
