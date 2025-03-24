@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+@plugin "@tailwindcss/typography";
 @theme {
   --animate-bounce: bounce 2s ease-in-out infinite;
   @keyframes bounce {

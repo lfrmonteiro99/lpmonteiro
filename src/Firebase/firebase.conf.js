@@ -4,6 +4,7 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getDatabase, ref, onValue, set, push, remove, get } from "firebase/database";
 import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
+import { getStorage } from 'firebase/storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -27,3 +28,4 @@ export const provider = new GoogleAuthProvider();
 export const db = getDatabase(app);
 export const vertexAI = getVertexAI(app);
 export const geminiModel = getGenerativeModel(vertexAI, { model: "gemini-2.0-flash" });
+export const storage = getStorage(app); 

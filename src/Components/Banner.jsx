@@ -206,62 +206,6 @@ export default function Banner() {
         isAnimating = true;
         animate();
       }
-      function animate() {
-        glassCtx.clearRect(0, 0, glassCanvas.width, glassCanvas.height);
-
-        // Update and filter out dead shards
-        shards = shards.filter((shard) => {
-          const isAlive = shard.update();
-          if (isAlive) {
-            shard.draw();
-          }
-          return isAlive;
-        });
-
-        // Continue animation if there are still shards
-        if (shards.length > 0) {
-          requestAnimationFrame(animate);
-        } else {
-          isAnimating = false;
-        }
-      }
-
-      // Handle click event
-      const handleClick = (event) => {
-        createShards(event.clientX, event.clientY);
-      };
-
-      window.addEventListener("click", handleClick);
-
-      window.addEventListener("resize", () => {
-        glassCanvas.width = window.innerWidth;
-        glassCanvas.height = window.innerHeight;
-      });
-
-      return () => {
-        window.removeEventListener("click", handleClick);
-        window.removeEventListener("resize", null);
-      };
-
-      // Rest of the class remains the same
-    }
-
-    function createShards(x, y) {
-      // Clear existing shards
-      shards = [];
-
-      // Create new shards at click position
-      for (let i = 0; i < 150; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = Math.random() * pointer.radius;
-        shards.push(new GlassShard(angle, distance, x, y));
-      }
-
-      // Start animation if not already running
-      if (!isAnimating) {
-        isAnimating = true;
-        animate();
-      }
     }
 
     function animate() {
@@ -315,37 +259,6 @@ export default function Banner() {
         <div className="text-center">
           <BannerPhraseSwapper />
           <BannerIntroductionText />
-          {/* <div className="sm:flex block justify-center mt-5">
-            <div className="px-4">
-              <a
-                href="/cv_latest.pdf"
-                className="transition text-center flex w-full justify-center text-center group duration-200 px-6 py-3 cursor-pointer w-full rounded-full mr-4 bg-transparent hover:bg-gradient-to-br hover:from-blue-400 hover:to-red-600 bg-slate-200 text-white hover:text-white hover:opacity-80transition text-center flex justify-center text-center group duration-200 px-6 py-3 cursor-pointer sm:w-fit rounded-full mr-4 bg-slate-200 opacity-80"
-              >
-                Download CV
-                <span className="ml-2">
-                  <svg
-                    width="20px"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 512 512"
-                  >
-                    <path
-                      fill="#e2e8f0"
-                      d="M288 32c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 242.7-73.4-73.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l128 128c12.5 12.5 32.8 12.5 45.3 0l128-128c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L288 274.7 288 32zM64 352c-35.3 0-64 28.7-64 64l0 32c0 35.3 28.7 64 64 64l384 0c35.3 0 64-28.7 64-64l0-32c0-35.3-28.7-64-64-64l-101.5 0-45.3 45.3c-25 25-65.5 25-90.5 0L165.5 352 64 352zm368 56a24 24 0 1 1 0 48 24 24 0 1 1 0-48z"
-                    />
-                  </svg>
-                </span>
-              </a>
-            </div>
-            <div className="sm:flex block item-center justify-center">
-              <a
-                href="#about"
-                className="group px-6 py-3 w-full sm:w-fit rounded-full flex items-center justify-center transition duration-200 hover:bg-gray-50/10 text-white hover:bg-opacity-5"
-              >
-                {`Know more about me`}{" "}
-                <span className="ml-2 inline-block transition-transform duration-200 group-hover:translate-x-1">{`->`}</span>
-              </a>
-            </div>
-          </div> */}
         </div>
       </div>
       <div className="absolute w-full bottom-0 left-0 right-0 h-1/6 bg-gradient-to-t from-transparent to-transparent z-30">

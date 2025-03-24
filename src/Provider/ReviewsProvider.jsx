@@ -16,7 +16,7 @@ import {
 } from "firebase/database";
 import { db } from "../Firebase/firebase.conf";
 
-export default function ReviewsProvider({ children }) {
+export function ReviewsProvider({ children }) {
   const [reviews, setReviews] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasMoreData, setHasMoreData] = useState(true);
@@ -93,31 +93,7 @@ export default function ReviewsProvider({ children }) {
     fetchReviewStats();
   }, [fetchReviewStats]);
 
-  // Add a review
-  const addReview = useCallback(
-    (review) => {
-      // Optimistically update the UI
-      setReviews((prevReviews) => [review, ...prevReviews]);
-
-      // Update the database
-      const reviewsDbRef = push(ref(db, "reviews"));
-      set(reviewsDbRef, review)
-        .then(() => {
-          // Update statistics after adding a review
-          fetchReviewStats();
-        })
-        .catch((err) => {
-          console.log("Error adding review:", err);
-          // Revert optimistic update if there's an error
-          setReviews((prevReviews) =>
-            prevReviews.filter((r) => r.id !== review.id)
-          );
-        });
-    },
-    [fetchReviewStats]
-  );
-
-  // Fetch paginated reviews
+  // Fetch reviews from Firebase
   const fetchData = useCallback(async () => {
     if (isLoading || !hasMoreData) {
       return;
@@ -221,6 +197,45 @@ export default function ReviewsProvider({ children }) {
       setIsLoading(false);
     }
   }, [isLoading, hasMoreData, oldestTimestamp, limit]);
+
+  // Add a new review
+  const addReview = useCallback(
+    async (review) => {
+      // Optimistically update the UI
+      setReviews((prevReviews) => [review, ...prevReviews]);
+
+      // Update the database
+      const reviewsRef = ref(db, "reviews");
+      const newReviewRef = push(reviewsRef);
+
+      const reviewWithTimestamp = {
+        ...review,
+        timestamp: Date.now(),
+        id: newReviewRef.key,
+      };
+
+      await set(newReviewRef, reviewWithTimestamp)
+        .then(() => {
+          // Update statistics after adding a review
+          fetchReviewStats();
+        })
+        .catch((err) => {
+          console.log("Error adding review:", err);
+          // Revert optimistic update if there's an error
+          setReviews((prevReviews) =>
+            prevReviews.filter((r) => r.id !== review.id)
+          );
+        });
+
+      return reviewWithTimestamp;
+    },
+    [fetchReviewStats]
+  );
+
+  // Initial fetch
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
     <ReviewsContext.Provider

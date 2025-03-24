@@ -302,7 +302,7 @@ export const Reviews = () => {
   `;
 
   return (
-    <section ref={eleRef} className=" h-min-screen">
+    <section ref={eleRef} className=" h-min-screen" id="reviews">
       <style>{styles}</style>
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-12 mt-16 md:mt-20">
         <div className="reviews max-w-4xl mx-auto">

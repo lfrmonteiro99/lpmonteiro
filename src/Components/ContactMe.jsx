@@ -283,6 +283,7 @@ export const ContactMe = () => {
         sectionRef.current = el;
       }}
       className="min-h-screen py-20 relative overflow-hidden"
+      id="contact"
     >
       <style>{styles}</style>
       <div

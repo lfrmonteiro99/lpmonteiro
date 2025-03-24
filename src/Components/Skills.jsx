@@ -98,8 +98,8 @@ const SkillCard = ({ category, skills }) => {
   };
 
   return (
-    <div className="rounded-lg min-h-[200px] border text-card-foreground shadow-sm group relative overflow-hidden bg-gray-900/80 backdrop-blur-sm bg-white/30 border-gray-700 hover:scale-[1.02] transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20">
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[rgba(100,100,255,0.2)] to-transparent group-hover:via-[rgba(118, 118, 191, 0.2)] animate-shimmer1"></div>
+    <div className="rounded-lg min-h-[200px] border text-card-foreground shadow-sm group relative overflow-hidden bg-transparent border-gray-700 hover:scale-[1.02] transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-900/10 to-transparent group-hover:via-[rgba(118, 118, 191, 0.2)] animate-shimmer1"></div>
       <div className="p-6 relative z-10">
         <div className="flex items-center gap-4 mb-6">
           <svg

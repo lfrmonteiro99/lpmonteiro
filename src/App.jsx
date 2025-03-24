@@ -1,61 +1,106 @@
-import React from "react";
-import Banner from "./Components/Banner";
-import "./index.css";
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useLocation,
+} from "react-router-dom";
 import Navbar from "./Components/Navbar";
+import Banner from "./Components/Banner";
 import About from "./Components/About";
-import Skills from "./Components/Skills";
-import Footer from "./Components/Footer";
+import BlogSection from "./Components/Blog/BlogSection";
 import Projects from "./Components/Projects";
+import Skills from "./Components/Skills";
 import Experience from "./Components/Experience";
-import { TerminalProvider } from "./Context/TerminalContext";
-import TerminalButton from "./Components/TerminalButton";
-import BackToTop from "./Components/BackToTop";
 import { Reviews } from "./Components/Reviews";
-import ReviewsProvider from "./Provider/ReviewsProvider";
 import ContactMe from "./Components/ContactMe";
+import Footer from "./Components/Footer";
+import BackToTop from "./Components/BackToTop";
+import TerminalButton from "./Components/TerminalButton";
+import BlogPostPage from "./Components/Blog/BlogPostPage";
+import { BlogProvider } from "./Provider/BlogProvider";
+import { ReviewsProvider } from "./Provider/ReviewsProvider";
+import { TerminalProvider } from "./Context/TerminalContext";
+import { CommentProvider } from "./Provider/CommentProvider";
 
-export default function App() {
-  console.log();
-  const [scrollPosition, setScrollPosition] = React.useState(0);
+// Main layout component that includes all sections except blog post pages
+const MainLayout = () => {
+  const [scrollPosition, setScrollPosition] = useState(0);
 
-  React.useEffect(() => {
-    const handleScroll = () => setScrollPosition(window.scrollY);
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPosition(window.scrollY);
+    };
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
   return (
-    <TerminalProvider>
-      <ReviewsProvider>
-        {/*
-        This example requires updating your template:
+    <>
+      <Navbar />
+      <Banner />
+      <About />
+      <BlogSection />
+      <Projects />
+      <Skills />
+      <Experience />
+      <Reviews />
+      <ContactMe />
+      <Footer />
+      <BackToTop />
+      <TerminalButton />
+    </>
+  );
+};
 
-        ```
-        <html class="h-full bg-gray-100">
-        <body class="h-full">
-        ```
-      */}
+// Wrapper component to handle scroll behavior
+const ScrollToTop = ({ children }) => {
+  const location = useLocation();
 
-        <div className="w-full bg-[rgb(22 24 22/1)] scroll-smooth">
-          <header>
-            <div className="w-full">
-              <Navbar scrollPosition={scrollPosition} />
-            </div>
-          </header>
-          <main className="pt-16 md:pt-24">
-            <Banner />
-            <About scrollPosition={scrollPosition} />
-            <Projects scrollPosition={scrollPosition} />
-            <Skills />
-            <Experience />
-            <Reviews />
-            <ContactMe />
-          </main>
-          <section className=""></section>
-          <Footer />
-          <BackToTop />
-          <TerminalButton />
-        </div>
-      </ReviewsProvider>
-    </TerminalProvider>
+  useEffect(() => {
+    // Check if we're returning from a blog post
+    if (location.state?.scrollToBlog) {
+      // Wait for the component to mount
+      setTimeout(() => {
+        const blogSection = document.getElementById("blog");
+        if (blogSection) {
+          blogSection.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+      // Clear the state after scrolling
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+
+  return children;
+};
+
+function App() {
+  return (
+    <Router>
+      <TerminalProvider>
+        <ReviewsProvider>
+          <BlogProvider>
+            <CommentProvider>
+              <ScrollToTop>
+                <div className="min-h-screen bg-[rgb(22 24 22/1)] flex flex-col">
+                  <Navbar />
+                  <main className="flex-grow">
+                    <Routes>
+                      <Route path="/" element={<MainLayout />} />
+                      <Route path="/blog/:postId" element={<BlogPostPage />} />
+                    </Routes>
+                  </main>
+                  <Footer />
+                </div>
+              </ScrollToTop>
+            </CommentProvider>
+          </BlogProvider>
+        </ReviewsProvider>
+      </TerminalProvider>
+    </Router>
   );
 }
+
+export default App;

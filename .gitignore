@@ -7,6 +7,20 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Zone.Identifier files
+**/*:Zone.Identifier
+**/*.Zone.Identifier
+
+# Firebase
+.firebase
+.firebase/
+.firebase/**
+.firebase/**/*
+.firebase/hosting.*.cache
+.firebase/hosting.ZGlzdA.cache
+database.rules.json
+
+# Dependencies
 node_modules
 dist
 dist-ssr
