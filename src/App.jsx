@@ -8,7 +8,7 @@ import {
 import Navbar from "./Components/Navbar";
 import Banner from "./Components/Banner";
 import About from "./Components/About";
-import BlogSection from "./Components/Blog/BlogSection";
+import BlogList from "./Components/Blog/BlogList";
 import Projects from "./Components/Projects";
 import Skills from "./Components/Skills";
 import Experience from "./Components/Experience";
@@ -41,7 +41,7 @@ const MainLayout = () => {
       <Navbar />
       <Banner />
       <About />
-      <BlogSection />
+      <BlogList />
       <Projects />
       <Skills />
       <Experience />

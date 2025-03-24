@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { signInWithGoogle } from "../Firebase/signin";
 
 export default function Navbar({ scrollPosition }) {
   const [active, setActive] = useState("home");
@@ -7,6 +8,7 @@ export default function Navbar({ scrollPosition }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [prevScrollPos, setPrevScrollPos] = useState(0);
   const [visible, setVisible] = useState(true);
+  const [user, setUser] = useState(null);
   const menuRef = useRef(null);
 
   // Memoize navigation items to prevent recreating on every render
@@ -14,6 +16,7 @@ export default function Navbar({ scrollPosition }) {
     () => [
       { id: "home", label: "Home" },
       { id: "about", label: "About" },
+      { id: "blog", label: "Blog" },
       { id: "projects", label: "Projects" },
       { id: "skills", label: "Skills" },
       { id: "experience", label: "Experience" },
@@ -22,6 +25,31 @@ export default function Navbar({ scrollPosition }) {
     ],
     []
   ); // Empty dependency array means this only runs once
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(savedUser);
+    }
+  }, []);
+
+  // Handle Google sign in
+  const handleGoogleSignIn = async () => {
+    try {
+      const response = await signInWithGoogle();
+      setUser(response.user.email);
+      localStorage.setItem("user", response.user.email);
+    } catch (error) {
+      console.error("Error signing in with Google:", error);
+    }
+  };
+
+  // Handle sign out
+  const handleSignOut = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
 
   // Handle scroll behavior for navbar
   useEffect(() => {
@@ -173,7 +201,7 @@ export default function Navbar({ scrollPosition }) {
 
           {/* Desktop Menu */}
           <motion.div
-            className="hidden md:flex gap-8 items-center"
+            className="hidden xl:flex gap-8 items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
@@ -205,27 +233,71 @@ export default function Navbar({ scrollPosition }) {
               ))}
             </div>
 
-            {/* Optional: Add a CTA button */}
-            <motion.a
-              href="/cv_latest.pdf"
-              className="ml-4 px-4 py-2 bg-white text-black hover:bg-transparent hover:text-white hover:border-white border-1 border-transparent font-medium text-sm hover:shadow-lg transition-all duration-300"
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.5)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5 }}
-            >
-              Download CV
-            </motion.a>
+            {/* Auth and CV buttons */}
+            <div className="flex items-center gap-4">
+              {user ? (
+                <motion.div
+                  className="flex items-center gap-3"
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                >
+                  <div className="bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">
+                      {user.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="text-white hover:text-blue-400 transition-colors duration-200"
+                  >
+                    Sign Out
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.button
+                  onClick={handleGoogleSignIn}
+                  className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                  whileHover={{
+                    scale: 1.05,
+                    boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.5)",
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24">
+                    <path
+                      fill="#ffffff"
+                      d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
+                    />
+                  </svg>
+                  Sign in
+                </motion.button>
+              )}
+
+              <motion.a
+                href="/cv_latest.pdf"
+                className="ml-4 px-4 py-2 bg-white text-black hover:bg-transparent hover:text-white hover:border-white border-1 border-transparent font-medium text-sm hover:shadow-lg transition-all duration-300"
+                whileHover={{
+                  scale: 1.05,
+                  boxShadow: "0 10px 25px -5px rgba(59, 130, 246, 0.5)",
+                }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5 }}
+              >
+                Download CV
+              </motion.a>
+            </div>
           </motion.div>
 
           {/* Mobile Menu Toggle - Fixed to ensure it works */}
           <motion.button
             aria-label={isOpen ? "Close menu" : "Open menu"}
-            className="p-2 z-50 md:hidden cursor-pointer"
+            className="p-2 z-50 xl:hidden cursor-pointer"
             onMouseDown={(e) => {
               // Prevent event bubbling
               e.preventDefault();
@@ -272,7 +344,7 @@ export default function Navbar({ scrollPosition }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md md:hidden"
+            className="fixed inset-0 z-40 bg-black/80 backdrop-blur-md xl:hidden"
           >
             <motion.div
               className="flex flex-col items-center justify-center h-full"
@@ -288,7 +360,7 @@ export default function Navbar({ scrollPosition }) {
                   variants={itemVariants}
                   onClick={() => {
                     setActive(item.id);
-                    setIsOpen(false); // Ensure this closes the menu
+                    setIsOpen(false);
                   }}
                   className={`w-full text-center text-2xl py-4 ${
                     active === item.id
@@ -302,16 +374,51 @@ export default function Navbar({ scrollPosition }) {
                 </motion.a>
               ))}
 
-              {/* Mobile CV download button */}
-              <motion.a
-                href="/cv_latest.pdf"
+              {/* Mobile Auth and CV buttons */}
+              <motion.div
                 variants={itemVariants}
-                className="mt-8 px-6 py-3 bg-white text-black hover:bg-transparent hover:text-white hover:border-white border-1 border-transparent font-medium"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="flex flex-col gap-4 mt-4"
               >
-                Download CV
-              </motion.a>
+                {user ? (
+                  <div className="flex items-center justify-center gap-3">
+                    <div className="bg-blue-500 rounded-full w-8 h-8 flex items-center justify-center">
+                      <span className="text-white font-bold text-sm">
+                        {user.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleSignOut}
+                      className="text-white hover:text-blue-400 transition-colors duration-200"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGoogleSignIn}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors duration-200"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path
+                        fill="#ffffff"
+                        d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"
+                      />
+                    </svg>
+                    Sign in with Google
+                  </button>
+                )}
+                <motion.a
+                  href="/cv_latest.pdf"
+                  variants={itemVariants}
+                  className="px-6 py-3 bg-white text-black hover:bg-transparent hover:text-white hover:border-white border-1 border-transparent font-medium text-center w-full"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Download CV
+                </motion.a>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}
