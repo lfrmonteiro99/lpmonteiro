@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlog } from "../../Context/BlogContext";
 import { useComment } from "../../Context/CommentContext";
+import AddBlogPost from "./AddBlogPost";
 
 export default function BlogList() {
   const navigate = useNavigate();
@@ -36,20 +37,6 @@ export default function BlogList() {
       day: "numeric",
     });
   };
-
-  // Add debug logging
-  React.useEffect(() => {
-    if (posts.length > 0) {
-      console.log(
-        "Posts with comments:",
-        posts.map((post) => ({
-          id: post.id,
-          title: post.title,
-          commentCount: getPostComments(post.id)?.length || 0,
-        }))
-      );
-    }
-  }, [posts, getPostComments]);
 
   const handlePostClick = (post) => {
     navigate(`/blog/${post.id}`);
@@ -87,6 +74,8 @@ export default function BlogList() {
   return (
     <section id="blog" className="py-20">
       <div className="container mx-auto px-6">
+        <AddBlogPost />
+
         <h2 className="text-4xl font-bold mb-8 text-white text-center">{`<Blog />`}</h2>
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Left Column - Filters */}

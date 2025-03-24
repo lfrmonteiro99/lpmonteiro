@@ -38,6 +38,7 @@ const AddBlogPost = () => {
   // Check if user is authorized from sessionStorage
   const isAuthorized = () => {
     const user = sessionStorage.getItem("user");
+    console.log("User:", user);
     return user === "lfrmonteiro99@gmail.com";
   };
 
@@ -252,7 +253,6 @@ const AddBlogPost = () => {
     e.preventDefault();
     if (!context.trim()) return;
 
-    console.log("Starting context submission with:", context);
     setIsGenerating(true);
     setError(null);
 
@@ -279,13 +279,10 @@ Requirements:
 - Make the content informative and valuable to readers
 - The summary should be concise and capture the main points`;
 
-      console.log("Sending prompt to Gemini:", prompt);
       const result = await geminiModel.generateContent(prompt);
-      console.log("Received response from Gemini");
 
       const response = result.response;
       const generatedContent = response.text();
-      console.log("Generated content:", generatedContent);
 
       // Parse the AI response
       const titleMatch = generatedContent.match(/Title: (.*?)(?:\n|$)/);
@@ -297,25 +294,17 @@ Requirements:
       );
       const tagsMatch = generatedContent.match(/Tags: (.*?)(?:\n|$)/);
 
-      console.log("Parsed matches:", {
-        title: titleMatch?.[1],
-        summary: summaryMatch?.[1],
-        content: contentMatch?.[1],
-        tags: tagsMatch?.[1],
-      });
-
       if (titleMatch) setTitle(titleMatch[1].trim());
       if (summaryMatch) setSummary(summaryMatch[1].trim());
       if (contentMatch) {
         const content = contentMatch[1].trim();
-        console.log("Setting content:", content);
         setContent(content);
       }
       if (tagsMatch) {
         // Clean up the tags string by removing brackets and extra spaces
         const tagsString = tagsMatch[1].replace(/[[\]]/g, "").trim();
         const extractedTags = tagsString.split(",").map((tag) => tag.trim());
-        console.log("Setting tags:", extractedTags);
+        "Setting tags:", extractedTags;
         setTags(extractedTags);
       }
 
@@ -397,14 +386,12 @@ Requirements:
       if (titleMatch) setTitle(titleMatch[1].trim());
       if (contentMatch) {
         const content = contentMatch[1].trim();
-        console.log("Setting content:", content);
         setContent(content);
       }
       if (tagsMatch) {
         // Clean up the tags string by removing brackets and extra spaces
         const tagsString = tagsMatch[1].replace(/[[\]]/g, "").trim();
         const extractedTags = tagsString.split(",").map((tag) => tag.trim());
-        console.log("Setting tags:", extractedTags);
         setTags(extractedTags);
       }
 

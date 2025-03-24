@@ -47,7 +47,6 @@ export const BlogProvider = ({ children }) => {
   const fetchPosts = async (isLoadMore = false) => {
     try {
       setLoading(true);
-      console.log("Fetching posts, isLoadMore:", isLoadMore);
       const postsRef = ref(database, "blogPosts");
       let q = query(
         postsRef,
@@ -67,7 +66,6 @@ export const BlogProvider = ({ children }) => {
 
       const snapshot = await onValue(q, (snapshot) => {
         const data = snapshot.val();
-        console.log("Received data from Firebase:", data);
         if (data) {
           const postsArray = Object.entries(data)
             .map(([id, post]) => ({
@@ -75,8 +73,6 @@ export const BlogProvider = ({ children }) => {
               ...post,
             }))
             .sort((a, b) => b.timestamp - a.timestamp);
-
-          console.log("Processed posts array:", postsArray);
 
           // Update last loaded timestamp for pagination
           if (postsArray.length > 0) {
@@ -104,7 +100,6 @@ export const BlogProvider = ({ children }) => {
               });
             }
           });
-          console.log("Extracted tags:", Array.from(tags));
           setAllTags(Array.from(tags));
         } else {
           console.log("No data received from Firebase");
@@ -142,15 +137,10 @@ export const BlogProvider = ({ children }) => {
     if (!posts.length) return [];
 
     const searchTermLower = searchTerm?.toLowerCase() || "";
-    console.log("Filtering posts with search term:", searchTermLower);
-    console.log("Selected tag:", selectedTag);
-    console.log("All posts:", posts);
-
     let filteredPosts = posts.filter((post) => {
       const title = post.title?.toLowerCase() || "";
       const content = post.content?.toLowerCase() || "";
       const tags = post.tags || [];
-      console.log("Post tags:", tags);
 
       const matchesSearch =
         !searchTerm ||
@@ -159,9 +149,6 @@ export const BlogProvider = ({ children }) => {
         tags.some((tag) => tag?.toLowerCase().includes(searchTermLower));
 
       const matchesTag = !selectedTag || tags.includes(selectedTag);
-
-      console.log("Post matches search:", matchesSearch);
-      console.log("Post matches tag:", matchesTag);
 
       return matchesSearch && matchesTag;
     });
@@ -178,21 +165,15 @@ export const BlogProvider = ({ children }) => {
 
   const getPostById = async (postId) => {
     try {
-      console.log("Fetching post with ID:", postId);
-      console.log("Current posts:", posts);
-      console.log("All posts:", allPosts);
-
       // First check in loaded posts
       const loadedPost = posts.find((post) => post.id === postId);
       if (loadedPost) {
-        console.log("Found post in loaded posts:", loadedPost);
         return loadedPost;
       }
 
       // If not found, check in all posts
       const allPost = allPosts[postId];
       if (allPost) {
-        console.log("Found post in all posts:", allPost);
         return {
           id: postId,
           ...allPost,
@@ -200,12 +181,10 @@ export const BlogProvider = ({ children }) => {
       }
 
       // If still not found, try to fetch directly from Firebase
-      console.log("Fetching post directly from Firebase");
       const postRef = ref(database, `blogPosts/${postId}`);
       const snapshot = await get(postRef);
       if (snapshot.exists()) {
         const postData = snapshot.val();
-        console.log("Found post in Firebase:", postData);
         return {
           id: postId,
           ...postData,
@@ -222,7 +201,6 @@ export const BlogProvider = ({ children }) => {
 
   const addBlog = async (postData) => {
     try {
-      console.log("Adding new blog post:", postData);
       const postsRef = ref(database, "blogPosts");
       const newPostRef = push(postsRef);
       const timestamp = Date.now();
@@ -245,9 +223,7 @@ export const BlogProvider = ({ children }) => {
         }
       }
 
-      console.log("Saving post with data:", newPost);
       await set(newPostRef, newPost);
-      console.log("Post saved successfully with ID:", newPostRef.key);
       return newPostRef.key;
     } catch (error) {
       console.error("Error adding post:", error);
@@ -257,7 +233,6 @@ export const BlogProvider = ({ children }) => {
 
   const updateBlog = async (postId, postData) => {
     try {
-      console.log("Updating blog post:", postId, postData);
       const postRef = ref(database, `blogPosts/${postId}`);
       const updatedPost = {
         ...postData,
@@ -281,7 +256,6 @@ export const BlogProvider = ({ children }) => {
       }
 
       await update(postRef, updatedPost);
-      console.log("Post updated successfully");
     } catch (error) {
       console.error("Error updating post:", error);
       throw error;
@@ -290,10 +264,8 @@ export const BlogProvider = ({ children }) => {
 
   const deleteBlog = async (postId) => {
     try {
-      console.log("Deleting blog post:", postId);
       const postRef = ref(database, `blogPosts/${postId}`);
       await remove(postRef);
-      console.log("Post deleted successfully");
     } catch (error) {
       console.error("Error deleting post:", error);
       throw error;

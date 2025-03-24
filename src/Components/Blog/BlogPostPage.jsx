@@ -83,7 +83,6 @@ const BlogPostPage = () => {
       try {
         // Get ID from URL if not available in params
         const postId = id || window.location.pathname.split("/").pop();
-        console.log("BlogPostPage - Post ID from URL:", postId);
 
         if (!postId) {
           console.error("No post ID provided in URL");

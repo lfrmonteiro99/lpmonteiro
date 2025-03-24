@@ -175,7 +175,6 @@ export default function Terminal({
               year >= startYear &&
               year <= endYear;
 
-            console.log("Is match?", isMatch);
             return isMatch;
           } catch (error) {
             // If any error occurs during parsing, skip this experience
@@ -183,8 +182,6 @@ export default function Terminal({
             return false;
           }
         });
-
-        console.log("Matching experiences:", matchingExperiences);
 
         if (!matchingExperiences.length) {
           return [

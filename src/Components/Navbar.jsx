@@ -28,9 +28,9 @@ export default function Navbar({ scrollPosition }) {
 
   // Load user from sessionStorage on mount
   useEffect(() => {
-    const savedUser = sessionStorage.getItem("user");
-    if (savedUser) {
-      setUser(savedUser);
+    const storedUser = sessionStorage.getItem("user");
+    if (storedUser) {
+      setUser(storedUser);
     }
   }, []);
 
@@ -308,7 +308,6 @@ export default function Navbar({ scrollPosition }) {
               setIsOpen(!isOpen);
 
               // Log for debugging
-              console.log("Button clicked, toggling menu to:", !isOpen);
             }}
             whileTap={{ scale: 0.9 }}
             initial={{ opacity: 0 }}

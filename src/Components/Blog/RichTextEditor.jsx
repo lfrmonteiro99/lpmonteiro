@@ -62,8 +62,6 @@ const MenuBar = ({ editor, onShowHtml, uploadedImagesRef, onSaveDraft }) => {
 
       // Compress the image before upload
       const compressedFile = await compressImage(file);
-      console.log("Original size:", file.size / 1024 / 1024, "MB");
-      console.log("Compressed size:", compressedFile.size / 1024 / 1024, "MB");
 
       // Create a unique filename
       const timestamp = Date.now();
@@ -96,7 +94,6 @@ const MenuBar = ({ editor, onShowHtml, uploadedImagesRef, onSaveDraft }) => {
 
       // Add the storage path to the set of uploaded images after the editor has processed it
       uploadedImagesRef.current.add(`blog-images/${filename}`);
-      console.log("Added image to tracking:", `blog-images/${filename}`);
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Failed to upload image. Please try again.");
