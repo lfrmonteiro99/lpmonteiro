@@ -22,6 +22,7 @@ import { BlogProvider } from "./Provider/BlogProvider";
 import { ReviewsProvider } from "./Provider/ReviewsProvider";
 import { TerminalProvider } from "./Context/TerminalContext";
 import { CommentProvider } from "./Provider/CommentProvider";
+import AddBlogPost from "./Components/Blog/AddBlogPost";
 
 // Main layout component that includes all sections except blog post pages
 const MainLayout = () => {
@@ -90,6 +91,10 @@ function App() {
                     <Routes>
                       <Route path="/" element={<MainLayout />} />
                       <Route path="/blog/:postId" element={<BlogPostPage />} />
+                      <Route
+                        path="/blog/edit/:postId"
+                        element={<AddBlogPost />}
+                      />
                     </Routes>
                   </main>
                   <Footer />

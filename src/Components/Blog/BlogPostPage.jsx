@@ -4,6 +4,7 @@ import { useBlog } from "../../Context/BlogContext";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 import BackToTop from "../BackToTop";
+import TerminalButton from "../TerminalButton";
 import { motion } from "framer-motion";
 import Comments from "./Comments";
 
@@ -73,9 +74,17 @@ const BlogPostSkeleton = () => {
 const BlogPostPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getPostById, loading } = useBlog();
+  const { getPostById, loading, toggleLike, getLikeCount, hasUserLiked } =
+    useBlog();
   const [post, setPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthor, setIsAuthor] = useState(false);
+
+  // Check if user is author
+  useEffect(() => {
+    const userEmail = sessionStorage.getItem("user");
+    setIsAuthor(userEmail === "lfrmonteiro99@gmail.com");
+  }, []);
 
   // Fetch post data
   useEffect(() => {
@@ -118,6 +127,10 @@ const BlogPostPage = () => {
       state: { scrollToBlog: true },
       replace: false,
     });
+  };
+
+  const handleEdit = () => {
+    navigate(`/blog/edit/${post.id}`);
   };
 
   if (loading || isLoading) {
@@ -184,18 +197,66 @@ const BlogPostPage = () => {
 
           {/* Cover Image */}
           {post.image && (
-            <div className="relative w-full h-[400px] mb-8 rounded-lg overflow-hidden">
+            <div className="relative w-full aspect-[16/9] mb-8 rounded-lg overflow-hidden">
               <img
                 src={post.image}
                 alt={post.title}
                 className="w-full h-full object-cover"
               />
+              <button
+                onClick={() => toggleLike(post.id)}
+                className={`absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-lg transition-all backdrop-blur-sm cursor-pointer hover:scale-105 ${
+                  hasUserLiked(post.id)
+                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/30 hover:bg-blue-500/30"
+                    : "bg-gray-900/50 text-gray-400 hover:bg-gray-800/80 border border-gray-700/50 hover:text-gray-300"
+                }`}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill={hasUserLiked(post.id) ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
+                </svg>
+                <span className="font-medium">{getLikeCount(post.id)}</span>
+              </button>
             </div>
           )}
 
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">{post.title}</h1>
+            <div className="flex justify-between items-start mb-4">
+              <h1 className="text-4xl font-bold text-white">{post.title}</h1>
+              {isAuthor && (
+                <button
+                  onClick={handleEdit}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                    />
+                  </svg>
+                  Edit Post
+                </button>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-4 text-gray-400 mb-6">
               <span className="flex items-center">
                 <svg
@@ -212,7 +273,7 @@ const BlogPostPage = () => {
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                   />
                 </svg>
-                {new Date(post.date).toLocaleDateString()}
+                {new Date(post.createdAt).toLocaleDateString()}
               </span>
               {post.tags && post.tags.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2">
@@ -255,20 +316,10 @@ const BlogPostPage = () => {
 
           {/* Comments */}
           <Comments postId={post.id} />
-
-          {/* Footer */}
-          <div className="mt-8 pt-8 border-t border-gray-700">
-            <button
-              onClick={handleBack}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Back to Blog
-            </button>
-          </div>
         </motion.div>
       </main>
-      <Footer />
       <BackToTop />
+      <TerminalButton />
     </div>
   );
 };

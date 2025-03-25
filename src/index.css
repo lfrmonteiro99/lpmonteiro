@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @plugin "@tailwindcss/typography";
+@plugin "tailwind-scrollbar";
 @theme {
   --animate-bounce: bounce 2s ease-in-out infinite;
   @keyframes bounce {

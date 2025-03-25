@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useBlog } from "../../Context/BlogContext";
 import { useComment } from "../../Context/CommentContext";
 import AddBlogPost from "./AddBlogPost";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function BlogList() {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ export default function BlogList() {
     loadMorePosts,
     isLoadingMore,
     hasPostsInDb,
+    toggleLike,
+    getLikeCount,
+    hasUserLiked,
   } = useBlog();
   const { getPostComments } = useComment();
 
@@ -42,6 +46,11 @@ export default function BlogList() {
     navigate(`/blog/${post.id}`);
   };
 
+  const handleEditClick = (e, post) => {
+    e.stopPropagation();
+    navigate(`/blog/edit/${post.id}`);
+  };
+
   const handleTagClick = (tag) => {
     setSelectedTag(selectedTag === tag ? null : tag);
   };
@@ -53,6 +62,11 @@ export default function BlogList() {
     } catch (error) {
       console.error("Error loading more posts:", error);
     }
+  };
+
+  const isAuthorized = () => {
+    const user = sessionStorage.getItem("user");
+    return user === "lfrmonteiro99@gmail.com";
   };
 
   if (loading && !posts.length) {
@@ -117,7 +131,7 @@ export default function BlogList() {
                 <h3 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">
                   Popular Tags
                 </h3>
-                <div className="flex flex-col space-y-2 max-h-[300px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-gray-700 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-600 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:hover:bg-gray-500">
+                <div className="flex flex-col space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar">
                   <button
                     onClick={() => handleTagClick(null)}
                     className={`w-full text-left px-2 py-1 text-sm transition-colors hover:text-blue-400 ${
@@ -126,36 +140,17 @@ export default function BlogList() {
                   >
                     All
                   </button>
-                  <div className="md:hidden">
-                    {allTags.slice(0, 3).map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleTagClick(tag)}
-                        className={`w-full text-left px-2 py-1 text-sm transition-colors hover:text-blue-400 ${
-                          selectedTag === tag
-                            ? "text-blue-400"
-                            : "text-gray-300"
-                        }`}
-                      >
-                        #{tag}
-                      </button>
-                    ))}
-                  </div>
-                  <div className="hidden md:block">
-                    {allTags.map((tag) => (
-                      <button
-                        key={tag}
-                        onClick={() => handleTagClick(tag)}
-                        className={`w-full text-left px-2 py-1 text-sm transition-colors hover:text-blue-400 ${
-                          selectedTag === tag
-                            ? "text-blue-400"
-                            : "text-gray-300"
-                        }`}
-                      >
-                        #{tag}
-                      </button>
-                    ))}
-                  </div>
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => handleTagClick(tag)}
+                      className={`w-full text-left px-2 py-1 text-sm transition-colors hover:text-blue-400 ${
+                        selectedTag === tag ? "text-blue-400" : "text-gray-300"
+                      }`}
+                    >
+                      #{tag}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
@@ -164,150 +159,308 @@ export default function BlogList() {
           {/* Right Column - Blog Posts */}
           <div className="lg:col-span-3 space-y-8">
             {/* Featured Post */}
-            {posts.length > 0 && (
-              <div
-                className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
-                onClick={() => handlePostClick(posts[0])}
-              >
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="relative h-64 md:h-full overflow-hidden">
-                    <img
-                      src={
-                        posts[0].image ||
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%232d3748'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%234a5568' font-family='Arial' font-size='24'%3ENo image available%3C/text%3E%3C/svg%3E"
-                      }
-                      alt={posts[0].title}
-                      className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-110"
-                    />
+            <AnimatePresence>
+              {posts.length > 0 && (
+                <motion.div
+                  key={posts[0].id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
+                  onClick={() => handlePostClick(posts[0])}
+                >
+                  <div className="flex flex-col md:flex-row">
+                    <div className="w-full md:w-[280px] h-48 md:h-[280px] relative overflow-hidden flex-shrink-0">
+                      <img
+                        src={
+                          posts[0].image ||
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%232d3748'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%234a5568' font-family='Arial' font-size='24'%3ENo image available%3C/text%3E%3C/svg%3E"
+                        }
+                        alt={posts[0].title}
+                        className="w-full h-full object-cover transform transition-transform duration-300 hover:scale-110"
+                      />
+                    </div>
+                    <div className="flex-grow p-8 flex flex-col min-w-0">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-2xl font-bold text-white mb-4 line-clamp-2">
+                          {posts[0].title}
+                        </h2>
+                        {isAuthorized() && (
+                          <button
+                            onClick={(e) => handleEditClick(e, posts[0])}
+                            className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                            title="Edit post"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      <div className="text-gray-400 mb-6 line-clamp-4">
+                        {posts[0].summary}
+                      </div>
+                      <div className="mt-auto">
+                        <div className="flex gap-2 overflow-x-auto pb-2 thin-scrollbar">
+                          {posts[0].tags?.slice(0, 3).map((tag, index) => (
+                            <span
+                              key={`${posts[0].id}-tag-${index}`}
+                              className="shrink-0 px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600/30 transition-colors border border-blue-500/20"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {posts[0].tags?.length > 3 && (
+                            <span className="shrink-0 px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/20">
+                              +{posts[0].tags.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-4 flex items-center gap-4 text-gray-400">
+                          <span className="text-sm">
+                            {formatDate(posts[0].createdAt)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleLike(posts[0].id);
+                              }}
+                              className={`flex items-center gap-1 transition-colors ${
+                                hasUserLiked(posts[0].id)
+                                  ? "text-blue-400"
+                                  : "text-gray-400 hover:text-blue-400"
+                              }`}
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                fill={
+                                  hasUserLiked(posts[0].id)
+                                    ? "currentColor"
+                                    : "none"
+                                }
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                />
+                              </svg>
+                              <span className="text-sm">
+                                {getLikeCount(posts[0].id)}
+                              </span>
+                            </button>
+                            <div className="flex items-center gap-1">
+                              <svg
+                                className="w-5 h-5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                />
+                              </svg>
+                              <span className="text-sm">
+                                {getPostComments(posts[0].id).length}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-8 flex flex-col justify-center">
-                    <h2 className="text-2xl font-bold text-white mb-4 line-clamp-2">
-                      {posts[0].title}
-                    </h2>
-                    <div className="text-gray-400 mb-6 line-clamp-4">
-                      {posts[0].summary}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {posts[0].tags?.slice(0, 3).map((tag, index) => (
-                        <span
-                          key={`${posts[0].id}-tag-${index}`}
-                          className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600/30 transition-colors border border-blue-500/20"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="mt-auto pt-4 flex items-center gap-4 text-gray-400">
-                      <span className="text-sm">
-                        {formatDate(posts[0].createdAt)}
-                      </span>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                        />
-                      </svg>
-                      <span className="text-sm -ml-2">
-                        {getPostComments(posts[0].id).length}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Blog Posts Feed */}
-            <div className="space-y-6">
-              {posts.slice(1).map((post) => (
-                <div
-                  key={post.id}
-                  className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-1 cursor-pointer h-[200px] relative"
-                  onClick={() => handlePostClick(post)}
-                >
-                  <div className="absolute left-0 top-0 w-48 h-[200px]">
-                    <img
-                      src={
-                        post.image ||
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%232d3748'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%234a5568' font-family='Arial' font-size='24'%3ENo image available%3C/text%3E%3C/svg%3E"
-                      }
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex gap-6 p-6 h-full pl-56">
-                    <div className="flex-grow flex flex-col">
-                      <h2 className="text-xl font-bold text-white mb-2 line-clamp-2">
-                        {post.title}
-                      </h2>
+            <motion.div
+              className="space-y-6"
+              layout="position"
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <AnimatePresence>
+                {posts.slice(1).map((post, index) => (
+                  <motion.div
+                    key={post.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{
+                      duration: 0.4,
+                      ease: "easeOut",
+                      delay: index * 0.1,
+                    }}
+                    className="bg-gray-800 rounded-lg overflow-hidden shadow-lg hover:shadow-xl hover:bg-gray-700 transition-all duration-300 transform hover:-translate-y-1 cursor-pointer relative flex flex-col md:flex-row"
+                    onClick={() => handlePostClick(post)}
+                  >
+                    <div className="w-full md:w-[280px] h-48 md:h-[280px] flex-shrink-0">
+                      <img
+                        src={
+                          post.image ||
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%232d3748'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%234a5568' font-family='Arial' font-size='24'%3ENo image available%3C/text%3E%3C/svg%3E"
+                        }
+                        alt={post.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-grow p-6 flex flex-col min-w-0">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-white mb-2 line-clamp-2">
+                          {post.title}
+                        </h2>
+                        {isAuthorized() && (
+                          <button
+                            onClick={(e) => handleEditClick(e, post)}
+                            className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                            title="Edit post"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-5 w-5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
                       <div className="text-gray-400 mb-4 line-clamp-4 flex-grow">
                         {post.summary}
                       </div>
-                      <div className="flex flex-wrap gap-2 mt-auto">
-                        {post.tags?.slice(0, 2).map((tag, index) => (
-                          <span
-                            key={`${post.id}-tag-${index}`}
-                            className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600/30 transition-colors border border-blue-500/20"
-                          >
-                            {tag}
+                      <div className="mt-auto">
+                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                          {post.tags?.slice(0, 3).map((tag, index) => (
+                            <span
+                              key={`${post.id}-tag-${index}`}
+                              className="shrink-0 px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full hover:bg-blue-600/30 transition-colors border border-blue-500/20"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {post.tags?.length > 3 && (
+                            <span className="shrink-0 px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/20">
+                              +{post.tags.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-4 flex items-center gap-4 text-gray-400">
+                          <span className="text-sm">
+                            {formatDate(post.createdAt)}
                           </span>
-                        ))}
-                        {post.tags?.length > 2 && (
-                          <span
-                            key={`${post.id}-more-tags`}
-                            className="px-2 py-1 text-xs bg-blue-600/20 text-blue-400 rounded-full border border-blue-500/20"
-                          >
-                            +{post.tags.length - 2} more
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-4 flex items-center gap-4 text-gray-400">
-                        <span className="text-sm">
-                          {formatDate(post.createdAt)}
-                        </span>
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                          />
-                        </svg>
-                        <span className="text-sm -ml-2">
-                          {getPostComments(post.id).length}
-                        </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleLike(post.id);
+                              }}
+                              className={`flex items-center gap-1 transition-colors ${
+                                hasUserLiked(post.id)
+                                  ? "text-blue-400"
+                                  : "text-gray-400 hover:text-blue-400"
+                              }`}
+                            >
+                              <svg
+                                className="w-5 h-5"
+                                fill={
+                                  hasUserLiked(post.id)
+                                    ? "currentColor"
+                                    : "none"
+                                }
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                                />
+                              </svg>
+                              <span className="text-sm">
+                                {getLikeCount(post.id)}
+                              </span>
+                            </button>
+                            <div className="flex items-center gap-1">
+                              <svg
+                                className="w-5 h-5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                                />
+                              </svg>
+                              <span className="text-sm">
+                                {getPostComments(post.id).length}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
 
             {/* Load More Button */}
-            {hasMoreData && (
-              <div className="flex justify-center">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            <AnimatePresence>
+              {hasMoreData && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex justify-center mt-12"
                 >
-                  {isLoadingMore ? "Loading..." : "Load More"}
-                </button>
-              </div>
-            )}
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{
+                      duration: 0.2,
+                      ease: "easeInOut",
+                    }}
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="group relative px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <motion.span
+                      animate={isLoadingMore ? { opacity: [1, 0.5, 1] } : {}}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      {isLoadingMore ? "Loading..." : "Load More"}
+                    </motion.span>
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

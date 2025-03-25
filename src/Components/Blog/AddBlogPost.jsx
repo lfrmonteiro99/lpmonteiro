@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useBlog } from "../../Context/BlogContext";
 import RichTextEditor from "./RichTextEditor";
 import { storage } from "../../Firebase/firebase.conf";
@@ -9,7 +9,6 @@ import { geminiModel } from "../../Firebase/firebase.conf";
 const AddBlogPost = () => {
   const navigate = useNavigate();
   const {
-    refreshBlogs,
     addBlog,
     drafts,
     saveDraft,
@@ -17,6 +16,8 @@ const AddBlogPost = () => {
     deleteDraft,
     selectedDraftId,
     updateDraft,
+    getPostById,
+    updateBlog,
   } = useBlog();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -34,11 +35,43 @@ const AddBlogPost = () => {
   const [urlInput, setUrlInput] = useState("");
   const [isUrlProcessing, setIsUrlProcessing] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
+  const [imageSearchQuery, setImageSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  // Get post ID from URL if editing
+  const { postId } = useParams();
+
+  // Load post data if editing
+  useEffect(() => {
+    const loadPostData = async () => {
+      if (postId) {
+        try {
+          const postData = await getPostById(postId);
+          if (postData) {
+            setTitle(postData.title);
+            setContent(postData.content);
+            setSummary(postData.summary);
+            setTags(postData.tags || []);
+            setIsFeatured(postData.isFeatured || false);
+            if (postData.image) {
+              setImagePreview(postData.image);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading post data:", error);
+          setError("Failed to load post data");
+        }
+      }
+    };
+
+    loadPostData();
+  }, [postId, getPostById]);
 
   // Check if user is authorized from sessionStorage
   const isAuthorized = () => {
     const user = sessionStorage.getItem("user");
-    console.log("User:", user);
     return user === "lfrmonteiro99@gmail.com";
   };
 
@@ -103,23 +136,6 @@ const AddBlogPost = () => {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadImage = async (file) => {
-    if (!file) return null;
-
-    try {
-      setIsUploading(true);
-      const storageRef = ref(storage, `blog-images/${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      return { url: downloadURL, path: storageRef.fullPath };
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      throw error;
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -201,51 +217,44 @@ const AddBlogPost = () => {
     setError(null);
 
     try {
-      if (!title.trim()) {
-        setError("Title is required to publish a post");
-        setIsSubmitting(false);
-        return;
-      }
+      let imageUrl = imagePreview;
 
-      if (!content.trim()) {
-        setError("Content is required to publish a post");
-        setIsSubmitting(false);
-        return;
-      }
-
-      let imageData = null;
       if (imageFile) {
-        imageData = await uploadImage(imageFile);
+        setIsUploading(true);
+        const storageRef = ref(
+          storage,
+          `blog-images/${Date.now()}-${imageFile.name}`
+        );
+        await uploadBytes(storageRef, imageFile);
+        imageUrl = await getDownloadURL(storageRef);
       }
 
-      const blogData = {
-        title: title.trim(),
-        content: content.trim(),
-        summary: summary.trim(),
-        date: new Date().toISOString().split("T")[0],
-        tags: tags,
+      const postData = {
+        title,
+        content,
+        summary,
+        tags,
+        image: imageUrl,
+        isFeatured,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        image: imageData?.url || null,
-        imagePath: imageData?.path || null,
-        featured: isFeatured,
-        timestamp: Date.now(),
       };
 
-      await addBlog(blogData);
-
-      if (selectedDraftId) {
-        await deleteDraft(selectedDraftId);
+      if (postId) {
+        // Update existing post
+        await updateBlog(postId, postData);
+      } else {
+        // Create new post
+        await addBlog(postData);
       }
 
-      await refreshBlogs();
-      clearForm();
       navigate("/");
     } catch (error) {
-      console.error("Error adding blog post:", error);
-      setError("Failed to publish post. Please try again.");
+      console.error("Error saving post:", error);
+      setError("Failed to save post. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -406,6 +415,46 @@ Requirements:
     }
   };
 
+  const handleImageSearch = async (e) => {
+    e.preventDefault();
+    if (!imageSearchQuery.trim()) return;
+
+    setIsSearching(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
+          imageSearchQuery
+        )}&per_page=12`,
+        {
+          headers: {
+            Authorization: `Client-ID ${process.env.REACT_APP_UNSPLASH_ACCESS_KEY}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch images");
+      }
+
+      const data = await response.json();
+      setSearchResults(data.results);
+    } catch (error) {
+      console.error("Error searching images:", error);
+      setError("Failed to search images. Please try again.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectImage = (image) => {
+    setSelectedImage(image);
+    setImagePreview(image.urls.regular);
+    setSearchResults([]);
+    setImageSearchQuery("");
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8 text-white">Add New Blog Post</h1>
@@ -482,9 +531,13 @@ Requirements:
           >
             <option value="">New Post</option>
             {drafts.map((draft) => (
-              <option key={draft.id} value={draft.id}>
-                {draft.title || "Untitled Draft"} (
-                {new Date(draft.lastModified).toLocaleDateString()})
+              <option key={draft.id} value={draft.id} className="truncate">
+                {draft.title
+                  ? `${draft.title.slice(0, 30)}${
+                      draft.title.length > 30 ? "..." : ""
+                    }`
+                  : "Untitled Draft"}{" "}
+                ({new Date(draft.lastModified).toLocaleDateString()})
               </option>
             ))}
           </select>
@@ -596,6 +649,63 @@ Requirements:
                 alt="Preview"
                 className="max-h-48 rounded-lg object-cover"
               />
+            </div>
+          )}
+        </div>
+
+        {/* Image Search */}
+        <div className="mb-6">
+          <label
+            htmlFor="imageSearch"
+            className="block text-sm font-medium text-gray-300 mb-2"
+          >
+            Search for Cover Image
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              id="imageSearch"
+              value={imageSearchQuery}
+              onChange={(e) => setImageSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleImageSearch(e);
+                }
+              }}
+              placeholder="Search for an image..."
+              className="flex-grow px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleImageSearch}
+              disabled={isSearching}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSearching ? "Searching..." : "Search"}
+            </button>
+          </div>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {searchResults.map((image) => (
+                <div
+                  key={image.id}
+                  className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all ${
+                    selectedImage?.id === image.id
+                      ? "ring-2 ring-blue-500"
+                      : "hover:ring-2 hover:ring-gray-500"
+                  }`}
+                  onClick={() => handleSelectImage(image)}
+                >
+                  <img
+                    src={image.urls.thumb}
+                    alt={image.alt_description || "Search result"}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
             </div>
           )}
         </div>

@@ -28,6 +28,7 @@ export const BlogProvider = ({ children }) => {
   const [selectedDraftId, setSelectedDraftId] = useState(null);
   const [lastLoadedTimestamp, setLastLoadedTimestamp] = useState(null);
   const [allPosts, setAllPosts] = useState({}); // Store all posts by ID
+  const [likes, setLikes] = useState({}); // Store likes for each post
 
   const postsPerPage = 9;
 
@@ -38,6 +39,18 @@ export const BlogProvider = ({ children }) => {
       const data = snapshot.val();
       if (data) {
         setAllPosts(data);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Fetch likes for all posts
+  useEffect(() => {
+    const likesRef = ref(database, "likes");
+    const unsubscribe = onValue(likesRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        setLikes(data);
       }
     });
     return () => unsubscribe();
@@ -206,7 +219,8 @@ export const BlogProvider = ({ children }) => {
       const timestamp = Date.now();
       const newPost = {
         ...postData,
-        date: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         timestamp: timestamp,
         tags: postData.tags || [], // Ensure tags is always an array
       };
@@ -234,9 +248,12 @@ export const BlogProvider = ({ children }) => {
   const updateBlog = async (postId, postData) => {
     try {
       const postRef = ref(database, `blogPosts/${postId}`);
+      const originalPost = await getPostById(postId);
+
       const updatedPost = {
+        ...originalPost,
         ...postData,
-        date: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         timestamp: Date.now(),
       };
 
@@ -360,6 +377,44 @@ export const BlogProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
+  // Function to handle likes
+  const toggleLike = async (postId) => {
+    try {
+      const currentLikes = likes[postId] || {};
+      const userEmail = sessionStorage.getItem("user") || "anonymous";
+      // Encode the email to make it a valid Firebase key
+      const encodedEmail = userEmail.replace(/[.#$[/\]]/g, "_");
+
+      if (currentLikes[encodedEmail]) {
+        // Unlike
+        const updates = {};
+        updates[`likes/${postId}/${encodedEmail}`] = null;
+        await update(ref(database), updates);
+      } else {
+        // Like
+        const updates = {};
+        updates[`likes/${postId}/${encodedEmail}`] = true;
+        await update(ref(database), updates);
+      }
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      throw error;
+    }
+  };
+
+  // Function to get like count for a post
+  const getLikeCount = (postId) => {
+    return Object.keys(likes[postId] || {}).length;
+  };
+
+  // Function to check if current user has liked a post
+  const hasUserLiked = (postId) => {
+    const userEmail = sessionStorage.getItem("user") || "anonymous";
+    // Encode the email to match the stored key
+    const encodedEmail = userEmail.replace(/[.#$[/\]]/g, "_");
+    return likes[postId]?.[encodedEmail] || false;
+  };
+
   const value = {
     posts: getFilteredPosts(),
     loading,
@@ -385,6 +440,9 @@ export const BlogProvider = ({ children }) => {
     getPostById,
     postsPerPage,
     updateDraft,
+    toggleLike,
+    getLikeCount,
+    hasUserLiked,
   };
 
   return <BlogContext.Provider value={value}>{children}</BlogContext.Provider>;
