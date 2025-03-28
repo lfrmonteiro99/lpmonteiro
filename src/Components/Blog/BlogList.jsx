@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useBlog } from "../../Context/BlogContext";
 import { useComment } from "../../Context/CommentContext";
@@ -22,8 +22,10 @@ export default function BlogList() {
     toggleLike,
     getLikeCount,
     hasUserLiked,
+    handleLinkedInShare,
   } = useBlog();
   const { getPostComments } = useComment();
+  const [linkedInContent, setLinkedInContent] = useState({});
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -67,6 +69,37 @@ export default function BlogList() {
   const isAuthorized = () => {
     const user = sessionStorage.getItem("user");
     return user === "lfrmonteiro99@gmail.com";
+  };
+
+  const handleLinkedInGenerate = async (post) => {
+    try {
+      const content = await handleLinkedInShare(post);
+
+      if (content) {
+        setLinkedInContent((prev) => ({
+          ...prev,
+          [post.id]: content,
+        }));
+
+        // Show success message
+        alert(
+          "LinkedIn content generated successfully! Click the LinkedIn icon to share."
+        );
+      } else {
+        console.log("No content was generated!");
+        throw new Error("No content generated");
+      }
+    } catch (error) {
+      console.error("Error in handleLinkedInGenerate:", error);
+      alert("Failed to generate LinkedIn content. Please try again.");
+    }
+  };
+
+  const openLinkedInShare = (post) => {
+    const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+      window.location.origin + `/blog/${post.id}`
+    )}`;
+    window.open(shareUrl, "_blank", "width=600,height=600");
   };
 
   if (loading && !posts.length) {
@@ -187,20 +220,64 @@ export default function BlogList() {
                           {posts[0].title}
                         </h2>
                         {isAuthorized() && (
-                          <button
-                            onClick={(e) => handleEditClick(e, posts[0])}
-                            className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                            title="Edit post"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLinkedInGenerate(posts[0]);
+                              }}
+                              className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                              title="Generate LinkedIn Content"
                             >
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                          </button>
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                              </svg>
+                            </button>
+                            {linkedInContent[posts[0].id] && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openLinkedInShare(posts[0]);
+                                }}
+                                className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                                title="Share on LinkedIn"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                                </svg>
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => handleEditClick(e, posts[0])}
+                              className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                              title="Edit post"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                              </svg>
+                            </button>
+                          </div>
                         )}
                       </div>
                       <div className="text-gray-400 mb-6 line-clamp-4">
@@ -325,20 +402,64 @@ export default function BlogList() {
                           {post.title}
                         </h2>
                         {isAuthorized() && (
-                          <button
-                            onClick={(e) => handleEditClick(e, post)}
-                            className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
-                            title="Edit post"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLinkedInGenerate(post);
+                              }}
+                              className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                              title="Generate LinkedIn Content"
                             >
-                              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                            </svg>
-                          </button>
+                              <svg
+                                className="w-5 h-5"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth="2"
+                                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                                />
+                              </svg>
+                            </button>
+                            {linkedInContent[post.id] && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openLinkedInShare(post);
+                                }}
+                                className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                                title="Share on LinkedIn"
+                              >
+                                <svg
+                                  className="w-5 h-5"
+                                  fill="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                >
+                                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                                </svg>
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => handleEditClick(e, post)}
+                              className="text-blue-400 hover:text-blue-300 transition-colors duration-200"
+                              title="Edit post"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                viewBox="0 0 20 20"
+                                fill="currentColor"
+                              >
+                                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                              </svg>
+                            </button>
+                          </div>
                         )}
                       </div>
                       <div className="text-gray-400 mb-4 line-clamp-4 flex-grow">

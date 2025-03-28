@@ -14,6 +14,7 @@ import {
 } from "firebase/database";
 import { database } from "../Firebase/firebase.conf";
 import { BlogContext } from "../Context/BlogContext";
+import { geminiModel } from "../Firebase/firebase.conf";
 
 export const BlogProvider = ({ children }) => {
   const [posts, setPosts] = useState([]);
@@ -223,6 +224,7 @@ export const BlogProvider = ({ children }) => {
         updatedAt: new Date().toISOString(),
         timestamp: timestamp,
         tags: postData.tags || [], // Ensure tags is always an array
+        linkedInContent: postData.linkedInContent || "", // Ensure linkedInContent is always a string
       };
 
       // If this post is featured, unfeature all other posts
@@ -302,6 +304,7 @@ export const BlogProvider = ({ children }) => {
       const newDraft = {
         ...draft,
         lastModified: new Date().toISOString(),
+        linkedInContent: draft.linkedInContent || "", // Ensure linkedInContent is always a string
       };
       await set(newDraftRef, newDraft);
       const updatedDrafts = [...drafts, { id: newDraftRef.key, ...newDraft }];
@@ -349,9 +352,14 @@ export const BlogProvider = ({ children }) => {
   const updateDraft = async (draftId, draftData) => {
     try {
       const draftRef = ref(database, `drafts/${draftId}`);
-      await update(draftRef, draftData);
+      const updatedDraftData = {
+        ...draftData,
+        lastModified: new Date().toISOString(),
+        linkedInContent: draftData.linkedInContent || "", // Ensure linkedInContent is always a string
+      };
+      await update(draftRef, updatedDraftData);
       setDrafts((prev) =>
-        prev.map((d) => (d.id === draftId ? { ...d, ...draftData } : d))
+        prev.map((d) => (d.id === draftId ? { ...d, ...updatedDraftData } : d))
       );
     } catch (error) {
       console.error("Error updating draft:", error);
@@ -415,6 +423,50 @@ export const BlogProvider = ({ children }) => {
     return likes[postId]?.[encodedEmail] || false;
   };
 
+  const handleLinkedInShare = async (post) => {
+    try {
+      // Generate LinkedIn post using Gemini
+      const prompt = `Create a compelling LinkedIn post to promote this blog post. The post should be engaging, professional, and encourage readers to click through to read more.
+
+Blog post details:
+Title: ${post.title}
+Summary: ${post.summary}
+Tags: ${post.tags.join(", ")}
+
+Requirements:
+1. Length: Write a detailed post (aim for 800-1200 characters)
+2. Structure:
+   - Start with a compelling hook or surprising statistic
+   - Share 2-3 key insights from the blog post
+   - Include a personal connection or why this topic matters
+   - End with a strong call to action
+3. Formatting:
+   - Use line breaks for readability
+   - Include 2-3 relevant hashtags
+   - Use bullet points or emojis sparingly
+4. Content:
+   - Make it feel like a conversation starter
+   - Include specific examples or takeaways
+   - Add social proof or credibility markers
+   - End with an engaging question to encourage comments
+5. Style:
+   - Professional yet conversational
+   - Clear value proposition
+   - Storytelling elements
+   - Problem-solution structure
+
+Return ONLY the LinkedIn post content, no additional text or comments.`;
+
+      const result = await geminiModel.generateContent(prompt);
+      const content = result.response.text().trim();
+      console.log("Generated LinkedIn content:", content);
+      return content;
+    } catch (error) {
+      console.error("Error generating LinkedIn post:", error);
+      throw error;
+    }
+  };
+
   const value = {
     posts: getFilteredPosts(),
     loading,
@@ -443,6 +495,7 @@ export const BlogProvider = ({ children }) => {
     toggleLike,
     getLikeCount,
     hasUserLiked,
+    handleLinkedInShare,
   };
 
   return <BlogContext.Provider value={value}>{children}</BlogContext.Provider>;

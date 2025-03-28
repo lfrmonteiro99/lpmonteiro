@@ -314,6 +314,66 @@ const BlogPostPage = () => {
             </div>
           </div>
 
+          {/* LinkedIn Content Section - Only visible to author */}
+          {isAuthor && post.linkedInContent && (
+            <div className="mt-8 bg-gray-800 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-semibold text-white">
+                  LinkedIn Content
+                </h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(post.linkedInContent);
+                      alert("LinkedIn content copied to clipboard!");
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                      />
+                    </svg>
+                    Copy Content
+                  </button>
+                  <button
+                    onClick={() => {
+                      const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                        window.location.origin + `/blog/${post.id}`
+                      )}`;
+                      window.open(shareUrl, "_blank", "width=600,height=600");
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-.88-.018-2.013-1.225-2.013-1.225 0-1.412 1.057-1.412 2.047v5.57h-3v-11h3v1.53h.045c.435-.823 1.5-1.694 3.088-1.694 3.3 0 3.862 2.17 3.862 4.995v6.169z" />
+                    </svg>
+                    Share on LinkedIn
+                  </button>
+                </div>
+              </div>
+              <div className="bg-gray-900 rounded-lg p-4">
+                <pre className="text-gray-300 whitespace-pre-wrap font-sans text-sm">
+                  {post.linkedInContent}
+                </pre>
+              </div>
+            </div>
+          )}
+
           {/* Comments */}
           <Comments postId={post.id} />
         </motion.div>

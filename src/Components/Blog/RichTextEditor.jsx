@@ -115,7 +115,6 @@ const MenuBar = ({ editor, onShowHtml, uploadedImagesRef, onSaveDraft }) => {
       setIsSavingDraft(true);
       const content = editor.getHTML();
       await onSaveDraft(content);
-      console.log("Draft saved successfully");
     } catch (error) {
       console.error("Error saving draft:", error);
       alert("Failed to save draft. Please try again.");
@@ -316,13 +315,22 @@ const RichTextEditor = ({
 
   useEffect(() => {
     if (editorRef.current) {
-      editorRef.current.innerHTML = content;
+      // Remove markdown code block markers if present
+      const cleanContent = content.replace(/^```html\n?|\n?```$/g, "").trim();
+      editorRef.current.innerHTML = cleanContent;
+
+      // Trigger input event to ensure onChange is called
+      const event = new Event("input", { bubbles: true });
+      editorRef.current.dispatchEvent(event);
+    } else {
+      console.log("RichTextEditor: Editor ref is null");
     }
   }, [content]);
 
   const handleInput = () => {
     if (editorRef.current) {
-      onChange(editorRef.current.innerHTML);
+      const newContent = editorRef.current.innerHTML;
+      onChange(newContent);
     }
   };
 

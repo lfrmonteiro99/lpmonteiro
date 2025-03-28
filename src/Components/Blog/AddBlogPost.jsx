@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBlog } from "../../Context/BlogContext";
 import RichTextEditor from "./RichTextEditor";
 import { storage } from "../../Firebase/firebase.conf";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { geminiModel } from "../../Firebase/firebase.conf";
+import axios from "axios";
 
 const AddBlogPost = () => {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ const AddBlogPost = () => {
     updateDraft,
     getPostById,
     updateBlog,
+    handleLinkedInShare,
   } = useBlog();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -39,6 +41,14 @@ const AddBlogPost = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const editorRef = useRef(null);
+  const [editorKey, setEditorKey] = useState(0);
+  const [linkedInContent, setLinkedInContent] = useState("");
+
+  // Add useEffect to monitor LinkedIn content changes
+  useEffect(() => {
+    console.log("LinkedIn content updated:", linkedInContent);
+  }, [linkedInContent]);
 
   // Get post ID from URL if editing
   const { postId } = useParams();
@@ -50,18 +60,28 @@ const AddBlogPost = () => {
         try {
           const postData = await getPostById(postId);
           if (postData) {
-            setTitle(postData.title);
-            setContent(postData.content);
-            setSummary(postData.summary);
+            setTitle(postData.title || "");
+            setContent(postData.content || "");
+            setSummary(postData.summary || "");
             setTags(postData.tags || []);
-            setIsFeatured(postData.isFeatured || false);
-            if (postData.image) {
-              setImagePreview(postData.image);
-            }
+            setImagePreview(postData.image || "");
+            setIsFeatured(postData.featured || false);
+            setLinkedInContent(postData.linkedInContent || "");
+
+            // Log loaded data
+            console.log("Loaded post data:", {
+              title: postData.title,
+              content: postData.content,
+              summary: postData.summary,
+              tags: postData.tags,
+              image: postData.image,
+              featured: postData.featured,
+              linkedInContent: postData.linkedInContent,
+            });
           }
         } catch (error) {
           console.error("Error loading post data:", error);
-          setError("Failed to load post data");
+          setError("Failed to load post data. Please try again.");
         }
       }
     };
@@ -125,6 +145,7 @@ const AddBlogPost = () => {
     setIsGenerating(false);
     setUrlInput("");
     setIsFeatured(false);
+    setLinkedInContent("");
   };
 
   const handleImageChange = (e) => {
@@ -151,6 +172,7 @@ const AddBlogPost = () => {
         content,
         tags: tags,
         lastModified: new Date().toISOString(),
+        linkedInContent: linkedInContent || "",
       };
 
       if (selectedDraftId) {
@@ -181,6 +203,7 @@ const AddBlogPost = () => {
         setTitle(draft.title || "");
         setContent(draft.content || "");
         setTags(draft.tags || []);
+        setLinkedInContent(draft.linkedInContent || "");
       }
     } catch (error) {
       console.error("Error loading draft:", error);
@@ -229,6 +252,9 @@ const AddBlogPost = () => {
         imageUrl = await getDownloadURL(storageRef);
       }
 
+      // Log the current state of linkedInContent
+      console.log("Current LinkedIn content:", linkedInContent);
+
       const postData = {
         title,
         content,
@@ -236,9 +262,13 @@ const AddBlogPost = () => {
         tags,
         image: imageUrl,
         isFeatured,
+        linkedInContent: linkedInContent || "", // Ensure linkedInContent is included
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+
+      // Log the full postData before submission
+      console.log("Submitting post data:", postData);
 
       if (postId) {
         // Update existing post
@@ -277,6 +307,8 @@ Content: [Your blog post content here in HTML format. Use <p> tags for paragraph
 
 Tags: [tag1, tag2, tag3, tag4, tag5]
 
+LinkedIn Content: [Create an engaging LinkedIn post to promote this blog post. Keep it under 1300 characters, include 2-3 relevant hashtags, make it professional and attention-grabbing, include a call to action, and format it nicely with line breaks for readability.]
+
 Context to use:
 ${context}
 
@@ -289,19 +321,30 @@ Requirements:
 - The summary should be concise and capture the main points`;
 
       const result = await geminiModel.generateContent(prompt);
-
       const response = result.response;
       const generatedContent = response.text();
+      console.log(generatedContent);
 
-      // Parse the AI response
+      // Extract LinkedIn content using string manipulation
+      const linkedInContentIndex =
+        generatedContent.indexOf("LinkedIn Content:");
+      if (linkedInContentIndex !== -1) {
+        const linkedInContent = generatedContent
+          .slice(linkedInContentIndex + "LinkedIn Content:".length)
+          .trim();
+        console.log("Extracted LinkedIn content:", linkedInContent);
+        setLinkedInContent(linkedInContent);
+      }
+
+      // Parse other content using existing regex patterns
       const titleMatch = generatedContent.match(/Title: (.*?)(?:\n|$)/);
       const summaryMatch = generatedContent.match(
-        /Summary: (.*?)(?:\nContent:|$)/s
+        /Summary: ([\s\S]*?)(?=\nContent:)/
       );
       const contentMatch = generatedContent.match(
-        /Content:\s*([\s\S]*?)(?=\nTags:|$)/
+        /Content:\s*([\s\S]*?)(?=\nTags:)/
       );
-      const tagsMatch = generatedContent.match(/Tags: (.*?)(?:\n|$)/);
+      const tagsMatch = generatedContent.match(/Tags: \[(.*?)\]/);
 
       if (titleMatch) setTitle(titleMatch[1].trim());
       if (summaryMatch) setSummary(summaryMatch[1].trim());
@@ -310,11 +353,23 @@ Requirements:
         setContent(content);
       }
       if (tagsMatch) {
-        // Clean up the tags string by removing brackets and extra spaces
-        const tagsString = tagsMatch[1].replace(/[[\]]/g, "").trim();
-        const extractedTags = tagsString.split(",").map((tag) => tag.trim());
-        "Setting tags:", extractedTags;
-        setTags(extractedTags);
+        const tags = tagsMatch[1].split(",").map((tag) => tag.trim());
+        setTags(tags);
+      }
+
+      // Extract keywords for image search
+      const keywords = [
+        titleMatch?.[1]?.trim(),
+        ...(tagsMatch?.[1]?.split(",").map((tag) => tag.trim()) || []),
+        summaryMatch?.[1]?.trim().split(" ").slice(0, 5).join(" "),
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      // Set the image search query and trigger search
+      if (keywords) {
+        setImageSearchQuery(keywords);
+        await handleImageSearch({ preventDefault: () => {} });
       }
 
       setContext(""); // Clear the context input after successful processing
@@ -417,32 +472,138 @@ Requirements:
 
   const handleImageSearch = async (e) => {
     e.preventDefault();
-    if (!imageSearchQuery.trim()) return;
-
     setIsSearching(true);
     setError(null);
 
     try {
-      const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
-          imageSearchQuery
-        )}&per_page=12`,
-        {
-          headers: {
-            Authorization: `Client-ID ${process.env.REACT_APP_UNSPLASH_ACCESS_KEY}`,
-          },
+      let searchQuery = imageSearchQuery;
+
+      if (!searchQuery) {
+        // Generate search terms using Gemini
+        const prompt = `Based on this blog post content, suggest 3-5 specific, descriptive search terms for finding a relevant cover image. Focus on visual concepts and key themes.
+
+Title: ${title}
+Summary: ${summary}
+Content: ${content}
+Tags: ${tags.join(", ")}
+
+Requirements:
+1. Each search term should be a specific visual concept
+2. Include relevant tags in the search terms
+3. Focus on concrete, searchable terms
+4. Avoid generic terms
+5. Return only the search terms, one per line`;
+
+        const geminiResult = await geminiModel.generateContent(prompt);
+        const geminiResponse = geminiResult.response.text();
+        console.log("Gemini response:", geminiResponse);
+
+        // Split response into search terms and filter out empty ones
+        const searchTerms = geminiResponse
+          .split("\n")
+          .map((term) => term.trim())
+          .filter((term) => term.length > 0);
+
+        if (searchTerms.length === 0) {
+          throw new Error("No valid search terms generated");
         }
-      );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch images");
+        // Use the first search term as primary query
+        searchQuery = searchTerms[0];
+
+        // Add additional context from title and tags
+        const contextualQuery = `${searchQuery} ${title} ${tags.join(" ")}`;
+        console.log("Searching for images with query:", contextualQuery);
+
+        // Make the API request with the contextual query
+        const searchResponse = await fetch(
+          `https://www.googleapis.com/customsearch/v1?key=${
+            import.meta.env.VITE_GOOGLE_API_KEY
+          }&cx=${
+            import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID
+          }&q=${encodeURIComponent(
+            contextualQuery
+          )}&searchType=image&imgSize=large&imgType=photo`
+        );
+
+        const searchData = await searchResponse.json();
+        console.log("Google Search API response:", searchData);
+
+        if (!searchData.items || searchData.items.length === 0) {
+          throw new Error("No images found");
+        }
+
+        // Filter results based on search terms and tags
+        const filteredResults = searchData.items.filter((item) => {
+          const title = item.title.toLowerCase();
+          const snippet = item.snippet.toLowerCase();
+          const searchTermsMatch = searchTerms.some(
+            (term) =>
+              title.includes(term.toLowerCase()) ||
+              snippet.includes(term.toLowerCase())
+          );
+          const tagsMatch = tags.some(
+            (tag) =>
+              title.includes(tag.toLowerCase()) ||
+              snippet.includes(tag.toLowerCase())
+          );
+          return searchTermsMatch || tagsMatch;
+        });
+
+        console.log("Filtered results:", filteredResults);
+
+        if (filteredResults.length === 0) {
+          throw new Error(
+            "No relevant images found. Try different search terms."
+          );
+        }
+
+        setSearchResults(filteredResults);
+        setImageSearchQuery(searchQuery);
+      } else {
+        // Use manual search query with tags
+        const contextualQuery = `${searchQuery} ${tags.join(" ")}`;
+        console.log("Searching for images with query:", contextualQuery);
+
+        const manualSearchResponse = await fetch(
+          `https://www.googleapis.com/customsearch/v1?key=${
+            import.meta.env.VITE_GOOGLE_API_KEY
+          }&cx=${
+            import.meta.env.VITE_GOOGLE_SEARCH_ENGINE_ID
+          }&q=${encodeURIComponent(
+            contextualQuery
+          )}&searchType=image&imgSize=large&imgType=photo`
+        );
+
+        const manualSearchData = await manualSearchResponse.json();
+
+        if (!manualSearchData.items || manualSearchData.items.length === 0) {
+          throw new Error("No images found");
+        }
+
+        // Filter results based on tags for manual search as well
+        const filteredResults = manualSearchData.items.filter((item) => {
+          const title = item.title.toLowerCase();
+          const snippet = item.snippet.toLowerCase();
+          return tags.some(
+            (tag) =>
+              title.includes(tag.toLowerCase()) ||
+              snippet.includes(tag.toLowerCase())
+          );
+        });
+
+        if (filteredResults.length === 0) {
+          throw new Error(
+            "No relevant images found. Try different search terms."
+          );
+        }
+
+        setSearchResults(filteredResults);
       }
-
-      const data = await response.json();
-      setSearchResults(data.results);
     } catch (error) {
-      console.error("Error searching images:", error);
-      setError("Failed to search images. Please try again.");
+      console.error("Error searching for images:", error);
+      setError(error.message || "Failed to search for images");
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
@@ -450,9 +611,57 @@ Requirements:
 
   const handleSelectImage = (image) => {
     setSelectedImage(image);
-    setImagePreview(image.urls.regular);
+    // Use the full image URL from Google Custom Search API
+    setImagePreview(image.link);
     setSearchResults([]);
     setImageSearchQuery("");
+  };
+
+  const handleLinkedInGenerate = async () => {
+    try {
+      console.log("Starting LinkedIn content generation with:", {
+        title,
+        summary,
+        tags,
+      });
+
+      const content = await handleLinkedInShare({
+        title: title,
+        summary: summary,
+        tags: tags,
+      });
+
+      console.log("Raw response from handleLinkedInShare:", content);
+
+      if (content) {
+        // Log before setting state
+        console.log("Generated LinkedIn content:", content);
+
+        // Update the LinkedIn content state and wait for it to be reflected
+        await new Promise((resolve) => {
+          setLinkedInContent(content);
+          // Use requestAnimationFrame to check the state after React has updated it
+          requestAnimationFrame(() => {
+            console.log("LinkedIn content state updated:", content);
+            resolve();
+          });
+        });
+
+        // Copy to clipboard
+        await navigator.clipboard.writeText(content);
+        console.log("LinkedIn content copied to clipboard");
+
+        alert(
+          "LinkedIn content generated and copied to clipboard! You can now paste it in the LinkedIn share dialog."
+        );
+      } else {
+        console.log("No content was generated!");
+        throw new Error("No content generated");
+      }
+    } catch (error) {
+      console.error("Error in handleLinkedInGenerate:", error);
+      alert("Failed to generate LinkedIn content. Please try again.");
+    }
   };
 
   return (
@@ -519,6 +728,23 @@ Requirements:
             </button>
           </div>
         </form>
+      </div>
+
+      {/* LinkedIn Content Field */}
+      <div>
+        <label
+          htmlFor="linkedInContent"
+          className="block text-sm font-medium text-gray-300 mb-2"
+        >
+          LinkedIn Content
+        </label>
+        <textarea
+          id="linkedInContent"
+          value={linkedInContent}
+          onChange={(e) => setLinkedInContent(e.target.value)}
+          placeholder="Enter content to share on LinkedIn..."
+          className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[100px]"
+        />
       </div>
 
       {/* Drafts Select */}
@@ -691,17 +917,17 @@ Requirements:
             <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {searchResults.map((image) => (
                 <div
-                  key={image.id}
+                  key={image.link}
                   className={`relative aspect-square rounded-lg overflow-hidden cursor-pointer transition-all ${
-                    selectedImage?.id === image.id
+                    selectedImage?.link === image.link
                       ? "ring-2 ring-blue-500"
                       : "hover:ring-2 hover:ring-gray-500"
                   }`}
                   onClick={() => handleSelectImage(image)}
                 >
                   <img
-                    src={image.urls.thumb}
-                    alt={image.alt_description || "Search result"}
+                    src={image.image?.thumbnailLink || image.link}
+                    alt={image.title || "Search result"}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -769,13 +995,37 @@ Requirements:
             Content
           </label>
           <RichTextEditor
-            key={selectedDraftId || "new-post"}
+            key={editorKey}
             content={content}
             onChange={setContent}
             showPreview={false}
             onSaveDraft={handleSaveDraft}
+            ref={editorRef}
           />
         </div>
+
+        <div className="flex gap-4 mb-4">
+          <button
+            type="button"
+            onClick={handleLinkedInGenerate}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
+          >
+            Generate LinkedIn Content
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+                window.location.origin + `/blog/${postId || ""}`
+              )}`;
+              window.open(shareUrl, "_blank", "width=600,height=600");
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-500 transition-colors"
+          >
+            Share on LinkedIn
+          </button>
+        </div>
+
         <div className="flex justify-end space-x-4">
           <button
             type="button"
